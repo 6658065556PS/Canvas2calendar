@@ -42,15 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = async () => {
+    // VITE_SITE_URL is set in Vercel env vars to the production domain.
+    // Falls back to window.location.origin for local dev.
+    const siteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, '')
+      ?? window.location.origin
+
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Request Google Calendar scope alongside profile scopes.
-        // Users will see a consent screen listing these permissions.
         scopes: 'openid email profile https://www.googleapis.com/auth/calendar.events',
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
         queryParams: {
-          // Force consent so we always get a fresh token with calendar scope
           access_type: 'offline',
           prompt: 'consent',
         },
