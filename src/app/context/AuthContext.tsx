@@ -42,16 +42,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = async () => {
-    // VITE_SITE_URL is set in Vercel env vars to the production domain.
-    // Falls back to window.location.origin for local dev.
-    const siteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, '')
-      ?? window.location.origin
+    // Build an explicit, unambiguous redirect URL.
+    // VITE_SITE_URL must be set in Vercel → Settings → Environment Variables
+    // to the production domain (e.g. https://canvas2calendar.vercel.app).
+    // If it is not set we fall back to localhost for local development.
+    const viteUrl = import.meta.env.VITE_SITE_URL as string | undefined
+    const base    = viteUrl
+      ? viteUrl.replace(/\/$/, '')          // strip any accidental trailing slash
+      : 'http://localhost:5173'
+    const redirectTo = `${base}/auth/callback`
 
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         scopes: 'openid email profile https://www.googleapis.com/auth/calendar.events',
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
