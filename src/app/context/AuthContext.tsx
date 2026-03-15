@@ -29,12 +29,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // 1. Restore any existing session from localStorage first
     supabase.auth.getSession().then(({ data }) => {
+      console.log('[AuthContext] initial getSession:', data.session ? 'session found' : 'no session')
       setSession(data.session)
       setLoading(false)
     })
 
     // 2. Then listen for future auth changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      console.log('[AuthContext] auth state changed:', _event, '| user:', newSession?.user?.email ?? 'none')
       setSession(newSession)
       setLoading(false)
 

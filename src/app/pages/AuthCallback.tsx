@@ -15,10 +15,21 @@ export function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('[AuthCallback] mounted')
+    console.log('[AuthCallback] URL is:', window.location.href)
+    console.log('[AuthCallback] search params:', window.location.search)
+    console.log('[AuthCallback] hash:', window.location.hash)
+
+    console.log('[AuthCallback] calling getSession...')
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('[AuthCallback] getSession returned')
+      console.log('[AuthCallback] session:', JSON.stringify(session))
+      console.log('[AuthCallback] error:', error ? error.message : 'none')
       if (session) {
+        console.log('[AuthCallback] -> navigating to /calendar')
         navigate('/calendar', { replace: true })
       } else {
+        console.log('[AuthCallback] -> no session, navigating to /auth')
         navigate('/auth', { replace: true })
       }
     })
