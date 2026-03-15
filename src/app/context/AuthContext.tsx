@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
+import { upsertProfile } from '../../lib/database'
 
 interface AuthContextValue {
   user: User | null
@@ -36,6 +37,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
       setLoading(false)
+
+      // Ensure a profiles row exists — safety net alongside the DB trigger
+      if (_event === 'SIGNED_IN' && newSession?.user) {
+        const u = newSession.user
+        upsertProfile(u.id, {
+          email: u.email ?? null,
+          full_name: u.user_metadata?.full_name ?? null,
+          avatar_url: u.user_metadata?.avatar_url ?? null,
+        })
+      }
     })
 
     return () => subscription.unsubscribe()

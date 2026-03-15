@@ -32,6 +32,7 @@ import {
   getWeekStart,
   saveGoogleEventId,
   updateTask,
+  upsertScheduledTask,
 } from "../../lib/database";
 import { syncWeekToGoogleCalendar } from "../../lib/googleCalendar";
 import type { ScheduledTask, Task as DBTask } from "../../lib/types";
@@ -563,6 +564,7 @@ export function Calendar() {
   };
 
   const handleDrop = (day: string, time: string, task: CalTask) => {
+    // Optimistic UI update
     setSchedule((prev) => ({
       ...prev,
       [day]: {
@@ -570,6 +572,14 @@ export function Calendar() {
         [time]: [...(prev[day]?.[time] ?? []), task],
       },
     }));
+
+    // Persist to Supabase for logged-in users with real UUIDs
+    if (user && task.id.includes("-")) {
+      const fullDay = fullDayNames[daysOfWeek.indexOf(day)];
+      upsertScheduledTask(user.id, task.id, fullDay, time, weekStart).then(({ error }) => {
+        if (error) console.error("[Calendar] upsertScheduledTask", error);
+      });
+    }
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────

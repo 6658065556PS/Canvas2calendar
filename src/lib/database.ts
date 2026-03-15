@@ -9,6 +9,21 @@ export async function addToWaitlist(email: string): Promise<{ error: string | nu
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────────
+
+/**
+ * Upsert the profile row — call this on every sign-in as a safety net
+ * alongside the DB trigger, in case the trigger was not run or failed.
+ */
+export async function upsertProfile(
+  userId: string,
+  profile: { email?: string | null; full_name?: string | null; avatar_url?: string | null }
+): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ id: userId, ...profile }, { onConflict: 'id' })
+  if (error) console.error('[DB] upsertProfile', error)
+}
+
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase
     .from('profiles')
