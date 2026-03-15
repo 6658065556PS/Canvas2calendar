@@ -1,30 +1,33 @@
 /// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js'
 
-let supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) ?? ''
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ?? ''
+// ─── Sanitize Supabase URL ────────────────────────────────────────────────────
+// Vercel env vars are sometimes saved without the protocol prefix or trailing
+// slash, which causes the Supabase SDK to produce malformed OAuth URLs like:
+//   cnxylelamwuimmkzmhov.supabase.cohttps://mysite.vercel.app/auth/callback
+//
+// We defensively normalise the URL before passing it to createClient.
 
-// Ensure the URL always has https:// — Vercel env vars are sometimes saved
-// without the protocol, causing the SDK to produce malformed OAuth URLs like
-// "myproject.supabase.cohttps://mysite.vercel.app/auth/callback"
-if (supabaseUrl && !supabaseUrl.startsWith('http')) {
-  supabaseUrl = 'https://' + supabaseUrl
+let rawUrl = ((import.meta.env.VITE_SUPABASE_URL as string) ?? '').trim()
+
+// 1. Ensure https:// prefix
+if (rawUrl && !rawUrl.startsWith('http')) {
+  rawUrl = 'https://' + rawUrl
 }
 
-// Ensure trailing slash — required by the Supabase JS SDK when constructing
-// auth endpoint paths. Without it the URL segments get concatenated directly.
-if (supabaseUrl && !supabaseUrl.endsWith('/')) {
-  supabaseUrl = supabaseUrl + '/'
+// 2. Ensure trailing slash (Supabase SDK requires it for correct path joining)
+if (rawUrl && !rawUrl.endsWith('/')) {
+  rawUrl = rawUrl + '/'
 }
 
-if (!supabaseUrl || !supabaseAnonKey) {
+const supabaseUrl     = rawUrl || 'https://placeholder.supabase.co/'
+const supabaseAnonKey = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string) ?? '').trim() || 'placeholder'
+
+if (supabaseUrl === 'https://placeholder.supabase.co/' || supabaseAnonKey === 'placeholder') {
   console.warn(
     '[Canvas2Calendar] Missing Supabase env vars. ' +
-    'Copy .env.example → .env.local and fill in your Supabase URL and anon key.'
+    'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your Vercel environment variables.'
   )
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co/',
-  supabaseAnonKey || 'placeholder'
-)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
