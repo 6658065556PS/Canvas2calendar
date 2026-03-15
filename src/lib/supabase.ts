@@ -34,6 +34,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    // detectSessionInUrl is disabled so the SDK does NOT race with
+    // AuthCallback's explicit exchangeCodeForSession call. Both trying
+    // to exchange the same PKCE code causes "invalid_grant" errors.
+    detectSessionInUrl: false,
+    storageKey: 'canvas2calendar-auth',
   },
 })
