@@ -27,18 +27,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Grab the initial session (e.g. after page refresh)
+    // 1. Restore any existing session from localStorage first
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
       setLoading(false)
     })
 
-    // Listen for auth state changes (sign-in, sign-out, token refresh)
+    // 2. Then listen for future auth changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
       setLoading(false)
 
-      // Ensure a profiles row exists — safety net alongside the DB trigger
+      // Ensure profile row exists on sign-in (safety net alongside DB trigger)
       if (_event === 'SIGNED_IN' && newSession?.user) {
         const u = newSession.user
         upsertProfile(u.id, {
@@ -53,21 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = async () => {
-    // Build an explicit, unambiguous redirect URL.
-    // VITE_SITE_URL must be set in Vercel → Settings → Environment Variables
-    // to the production domain (e.g. https://canvas2calendar.vercel.app).
-    // If it is not set we fall back to localhost for local development.
-    const viteUrl = import.meta.env.VITE_SITE_URL as string | undefined
-    const base    = viteUrl
-      ? viteUrl.replace(/\/$/, '')          // strip any accidental trailing slash
-      : 'http://localhost:5173'
-    const redirectTo = `${base}/auth/callback`
-
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
+        redirectTo: 'https://canvas2calendar.vercel.app/auth/callback',
         scopes: 'openid email profile https://www.googleapis.com/auth/calendar.events',
-        redirectTo,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -85,7 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: session?.user ?? null,
     session,
     loading,
-    // provider_token is the Google OAuth access token Supabase captures
     providerToken: session?.provider_token ?? null,
     signInWithGoogle,
     signOut,
