@@ -7,31 +7,17 @@ export function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    async function handleCallback() {
-      // 1. Try PKCE flow first (?code= in query string)
-      const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href)
-      if (!error && data.session) {
+    const hash = new URLSearchParams(window.location.hash.slice(1))
+    const access_token = hash.get('access_token')
+    const refresh_token = hash.get('refresh_token')
+
+    if (access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token }).then(() => {
         navigate('/calendar', { replace: true })
-        return
-      }
-
-      // 2. Fall back to implicit flow (#access_token= in hash)
-      const hash = new URLSearchParams(window.location.hash.slice(1))
-      const access_token = hash.get('access_token')
-      const refresh_token = hash.get('refresh_token')
-      if (access_token && refresh_token) {
-        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token })
-        if (!sessionError && sessionData.session) {
-          navigate('/calendar', { replace: true })
-          return
-        }
-      }
-
-      // 3. Nothing worked
+      })
+    } else {
       navigate('/auth', { replace: true })
     }
-
-    handleCallback()
   }, [navigate])
 
   return (
