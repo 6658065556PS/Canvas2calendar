@@ -3,36 +3,70 @@ import { useNavigate } from 'react-router'
 import { supabase } from '../../lib/supabase'
 import { Calendar, Loader2 } from 'lucide-react'
 
-/**
- * Lives at /auth/callback.
- *
- * With detectSessionInUrl: true (SDK default), createClient() auto-exchanges
- * the PKCE code from the URL. getSession() internally waits for that exchange
- * to finish (via initializePromise) before returning — so calling it here
- * is safe and will have the session ready.
- */
 export function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    console.log('[AuthCallback] mounted')
-    console.log('[AuthCallback] URL is:', window.location.href)
-    console.log('[AuthCallback] search params:', window.location.search)
-    console.log('[AuthCallback] hash:', window.location.hash)
+    const url  = window.location.href
+    const hash = window.location.hash      // e.g. #access_token=...&refresh_token=...
+    const search = window.location.search  // e.g. ?code=...
 
-    console.log('[AuthCallback] calling getSession...')
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('[AuthCallback] getSession returned')
-      console.log('[AuthCallback] session:', JSON.stringify(session))
-      console.log('[AuthCallback] error:', error ? error.message : 'none')
-      if (session) {
-        console.log('[AuthCallback] -> navigating to /calendar')
-        navigate('/calendar', { replace: true })
-      } else {
-        console.log('[AuthCallback] -> no session, navigating to /auth')
-        navigate('/auth', { replace: true })
-      }
-    })
+    console.log('[AuthCallback] mounted')
+    console.log('[AuthCallback] full URL:', url)
+    console.log('[AuthCallback] hash:', hash)
+    console.log('[AuthCallback] search:', search)
+
+    const hashParams  = new URLSearchParams(hash.slice(1))   // strip leading #
+    const queryParams = new URLSearchParams(search)
+
+    const accessToken  = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    const code         = queryParams.get('code')
+
+    console.log('[AuthCallback] access_token in hash:', !!accessToken)
+    console.log('[AuthCallback] refresh_token in hash:', !!refreshToken)
+    console.log('[AuthCallback] code in query:', !!code)
+
+    if (accessToken && refreshToken) {
+      // ── Implicit flow ──────────────────────────────────────────────────────
+      // Supabase returned tokens directly in the URL hash.
+      console.log('[AuthCallback] implicit flow → calling setSession')
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ data, error }) => {
+          console.log('[AuthCallback] setSession result — session:', !!data.session, 'error:', error?.message)
+          if (data.session) {
+            navigate('/calendar', { replace: true })
+          } else {
+            console.error('[AuthCallback] setSession returned no session:', error)
+            navigate('/auth', { replace: true })
+          }
+        })
+
+    } else if (code) {
+      // ── PKCE flow ──────────────────────────────────────────────────────────
+      // Supabase returned a one-time code; we must exchange it for a session.
+      console.log('[AuthCallback] PKCE flow → calling exchangeCodeForSession')
+      supabase.auth.exchangeCodeForSession(url)
+        .then(({ data, error }) => {
+          console.log('[AuthCallback] exchangeCodeForSession result — session:', !!data.session, 'error:', error?.message)
+          if (data.session) {
+            navigate('/calendar', { replace: true })
+          } else {
+            console.error('[AuthCallback] exchange returned no session:', error)
+            navigate('/auth', { replace: true })
+          }
+        })
+
+    } else {
+      // ── No tokens ─────────────────────────────────────────────────────────
+      // Could be a direct visit or an OAuth error.
+      const oauthError = queryParams.get('error_description') ?? queryParams.get('error')
+      console.log('[AuthCallback] no tokens found, oauth error:', oauthError)
+      supabase.auth.getSession().then(({ data }) => {
+        console.log('[AuthCallback] fallback getSession:', !!data.session)
+        navigate(data.session ? '/calendar' : '/auth', { replace: true })
+      })
+    }
   }, [navigate])
 
   return (
