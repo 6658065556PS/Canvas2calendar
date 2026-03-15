@@ -4,23 +4,46 @@ import { supabase } from '../../lib/supabase'
 import { Calendar, Loader2 } from 'lucide-react'
 
 /**
- * This page lives at /auth/callback.
- * Supabase redirects the user here after the Google OAuth flow completes.
- * It exchanges the code/fragment for a session, then sends the user to /calendar.
+ * Lives at /auth/callback.
+ * Supabase redirects here after Google OAuth. The SDK detects the code/hash
+ * in the URL (detectSessionInUrl: true) and exchanges it for a session.
+ * We wait for the SIGNED_IN event rather than calling getSession() eagerly,
+ * because the code exchange is async and getSession() can return null before
+ * it completes — causing a premature redirect back to /auth.
  */
 export function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // When Supabase redirects back it puts the session info in the URL hash.
-    // getSession() processes it automatically.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        navigate('/calendar', { replace: true })
-      } else {
-        navigate('/auth', { replace: true })
+    let navigated = false
+
+    const go = (path: string) => {
+      if (navigated) return
+      navigated = true
+      navigate(path, { replace: true })
+    }
+
+    // Primary: wait for SDK to fire SIGNED_IN after code exchange
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        go('/calendar')
+      } else if (event === 'SIGNED_OUT') {
+        go('/auth')
       }
     })
+
+    // Fallback: session already exists (e.g. user revisited callback while logged in)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) go('/calendar')
+    })
+
+    // Safety net: if nothing resolves in 10 s, send to sign-in
+    const timeout = setTimeout(() => go('/auth'), 10_000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [navigate])
 
   return (
