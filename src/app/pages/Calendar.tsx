@@ -436,6 +436,8 @@ export function Calendar() {
     return `${fmt(mon)}–${fmt(sun)}, ${sun.getFullYear()}`;
   })();
 
+  useEffect(() => { document.title = "Calendar — CalBuddy"; }, []);
+
   // ── Load tasks ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) {

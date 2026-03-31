@@ -461,6 +461,8 @@ function DecompositionContent() {
 
   const hasTasks = tasks.length > 0;
 
+  useEffect(() => { document.title = "Decompose Assignments — CalBuddy"; }, []);
+
   // Dismiss popup on any click outside
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {

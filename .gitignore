@@ -1,7 +1,19 @@
 node_modules/
 dist/
+.vercel/
+
+# Environment files — only .env.example is safe to commit
+.env
 .env.local
 .env.*.local
+.env.production
+.env.staging
+
+# OS / editor
 .DS_Store
 *.log
 .claude/
+
+# Vite cache
+.vite/
+

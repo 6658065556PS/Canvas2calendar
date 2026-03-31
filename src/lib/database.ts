@@ -41,6 +41,31 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
   return { error: error?.message ?? null }
 }
 
+// ─── Onboarding ───────────────────────────────────────────────────────────
+
+export interface OnboardingData {
+  role: 'student' | 'faculty'
+  scet_mode?: 'certificate' | 'single'
+  scet_courses?: string[]
+}
+
+export async function saveOnboardingProfile(
+  userId: string,
+  data: OnboardingData,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      onboarding_completed: true,
+      role: data.role,
+      scet_mode: data.scet_mode ?? null,
+      scet_courses: data.scet_courses ?? [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+  return { error: error?.message ?? null }
+}
+
 // ─── Assignments ──────────────────────────────────────────────────────────
 export async function getAssignments(userId: string): Promise<Assignment[]> {
   const { data } = await supabase

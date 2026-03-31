@@ -35,7 +35,17 @@ const ItemType = "TASK";
 
 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const shortDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const dates = ["Mar 9", "Mar 10", "Mar 11", "Mar 12", "Mar 13", "Mar 14", "Mar 15"];
+
+function buildWeekDates(): string[] {
+  const sunday = new Date(getWeekStart());
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday);
+    d.setDate(sunday.getDate() + i);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  });
+}
+
+const dates = buildWeekDates();
 
 const timeSlots = [
   "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
@@ -396,6 +406,8 @@ function WorkspaceContent() {
     });
     return initialSchedule;
   });
+
+  useEffect(() => { document.title = "Workspace — CalBuddy"; }, []);
 
   // Load tasks from Decomposition state, Supabase (if auth'd), or localStorage
   useEffect(() => {

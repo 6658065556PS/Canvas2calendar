@@ -12,7 +12,8 @@ interface AppNavProps {
 }
 
 const NAV_LINKS = [
-  { label: "Assignments", path: "/landing" },
+  { label: "Dashboard",   path: "/dashboard" },
+  { label: "Courses",     path: "/coursework" },
   { label: "My Tasks",    path: "/decomposition" },
   { label: "Calendar",    path: "/calendar" },
 ] as const;

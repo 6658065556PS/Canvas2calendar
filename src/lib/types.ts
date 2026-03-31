@@ -6,6 +6,20 @@ export interface Profile {
   full_name: string | null
   avatar_url: string | null
   canvas_api_token: string | null
+  canvas_feed_url: string | null   // bCourses iCal feed URL (alternative to API token)
+
+  // ── Onboarding ─────────────────────────────────────────────────────────
+  // DB migration required:
+  //   alter table profiles add column canvas_feed_url text;
+  //   alter table profiles add column onboarding_completed boolean default false;
+  //   alter table profiles add column role text;
+  //   alter table profiles add column scet_mode text;
+  //   alter table profiles add column scet_courses text[] default '{}';
+  onboarding_completed: boolean | null
+  role: 'student' | 'faculty' | null
+  scet_mode: 'certificate' | 'single' | null
+  scet_courses: string[] | null   // selected SCET course codes, e.g. ["ENGIN 183A", "ENGIN 183C"]
+
   settings: {
     autoSync: boolean
     breakDownAssignments: boolean

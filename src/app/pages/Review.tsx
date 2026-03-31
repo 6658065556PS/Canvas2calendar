@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { Calendar, BookOpen, FileText, MessageSquare, Brain, Clock, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, FileText, MessageSquare, Brain, Clock, Pencil, Trash2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
+import { AppNav } from "../components/AppNav";
 
 interface Task {
   id: string;
@@ -109,6 +110,8 @@ const categoryConfig = {
 export function Review() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState(mockTasks);
+
+  useEffect(() => { document.title = "Review Tasks — CalBuddy"; }, []);
   const [editingTask, setEditingTask] = useState<{ taskId: string; field: 'name' | 'time' } | null>(null);
 
   const toggleTask = (id: string) => {
@@ -150,17 +153,7 @@ export function Review() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      {/* Header */}
-      <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="size-8 bg-neutral-900 rounded-lg flex items-center justify-center">
-              <Calendar className="size-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-neutral-900">Canvas2Calendar</span>
-          </div>
-        </div>
-      </header>
+      <AppNav backTo="/decomposition" />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Title Section */}

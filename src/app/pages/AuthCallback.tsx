@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { supabase } from '../../lib/supabase'
-import { Calendar, Loader2 } from 'lucide-react'
+import { getProfile } from '../../lib/database'
+import { Loader2 } from 'lucide-react'
 
 export function AuthCallback() {
   const navigate = useNavigate()
@@ -11,22 +12,35 @@ export function AuthCallback() {
     const access_token = hash.get('access_token')
     const refresh_token = hash.get('refresh_token')
 
-    if (access_token && refresh_token) {
-      supabase.auth.setSession({ access_token, refresh_token }).then(() => {
-        navigate('/calendar', { replace: true })
-      })
-    } else {
+    if (!access_token || !refresh_token) {
       navigate('/auth', { replace: true })
+      return
     }
+
+    supabase.auth.setSession({ access_token, refresh_token }).then(async ({ data }) => {
+      const userId = data.session?.user?.id
+      if (!userId) {
+        navigate('/auth', { replace: true })
+        return
+      }
+
+      // Check if this user has completed onboarding
+      const profile = await getProfile(userId)
+      if (!profile || !profile.onboarding_completed) {
+        navigate('/onboarding', { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
+    })
   }, [navigate])
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="size-14 bg-neutral-900 rounded-2xl flex items-center justify-center">
-          <Calendar className="size-7 text-white" />
+    <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-[#003262] flex items-center justify-center">
+          <span className="text-[7px] font-bold text-[#FDB515]" aria-hidden>B</span>
         </div>
-        <Loader2 className="size-5 text-neutral-400 animate-spin" />
+        <Loader2 className="size-4 text-neutral-400 animate-spin" />
         <p className="text-sm text-neutral-500">Completing sign-in…</p>
       </div>
     </div>

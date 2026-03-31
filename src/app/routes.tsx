@@ -8,19 +8,47 @@ import { Calendar } from "./pages/Calendar";
 import { Settings } from "./pages/Settings";
 import { Auth } from "./pages/Auth";
 import { AuthCallback } from "./pages/AuthCallback";
+import { Workspace } from "./pages/Workspace";
+import { Onboarding } from "./pages/Onboarding";
+import { ComingSoon } from "./pages/ComingSoon";
+import { Dashboard } from "./pages/Dashboard";
+import { Coursework } from "./pages/Coursework";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   // ── Public routes ──────────────────────────────────────────────────────
-  { path: "/",         Component: Home },
-  { path: "/landing",  Component: Landing },
-  { path: "/sync",     Component: Sync },
-  { path: "/decomposition", Component: Decomposition },
-  { path: "/review",   Component: Review },
-  { path: "/auth",     Component: Auth },
+  { path: "/",              Component: Home },
+  { path: "/landing",       Component: Landing },
+  { path: "/auth",          Component: Auth },
   { path: "/auth/callback", Component: AuthCallback },
+  { path: "/onboarding",    Component: Onboarding },
+  { path: "/coming-soon",   Component: ComingSoon },
 
-  // ── Protected routes (require Google sign-in) ──────────────────────────
+  // ── Protected routes (require sign-in + completed onboarding) ──────────
+  {
+    path: "/dashboard",
+    element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
+  },
+  {
+    path: "/coursework",
+    element: <ProtectedRoute><Coursework /></ProtectedRoute>,
+  },
+  {
+    path: "/sync",
+    element: <ProtectedRoute><Sync /></ProtectedRoute>,
+  },
+  {
+    path: "/decomposition",
+    element: <ProtectedRoute><Decomposition /></ProtectedRoute>,
+  },
+  {
+    path: "/review",
+    element: <ProtectedRoute><Review /></ProtectedRoute>,
+  },
+  {
+    path: "/workspace",
+    element: <ProtectedRoute><Workspace /></ProtectedRoute>,
+  },
   {
     path: "/calendar",
     element: <ProtectedRoute><Calendar /></ProtectedRoute>,

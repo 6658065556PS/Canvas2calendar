@@ -10,6 +10,8 @@ import {
   CalendarCheck,
   User,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { AppNav } from "../components/AppNav";
@@ -26,19 +28,28 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
+  // Canvas token state
+  const [canvasToken, setCanvasToken] = useState("");
+  const [showToken, setShowToken] = useState(false);
+  const [savingToken, setSavingToken] = useState(false);
+  const [tokenMsg, setTokenMsg] = useState<string | null>(null);
+
   // Local copies of toggle states
   const [autoSync, setAutoSync] = useState(true);
   const [breakDown, setBreakDown] = useState(true);
   const [syncAnnouncements, setSyncAnnouncements] = useState(false);
-  const [timeEst, setTimeEst] = useState("moderate");
-  const [workload, setWorkload] = useState("balanced");
-  const [weekStart, setWeekStartDay] = useState("sunday");
+  const [timeEst, setTimeEst] = useState<'conservative' | 'moderate' | 'aggressive'>("moderate");
+  const [workload, setWorkload] = useState<'balanced' | 'front-loaded' | 'back-loaded'>("balanced");
+  const [weekStart, setWeekStartDay] = useState<'sunday' | 'monday'>("sunday");
+
+  useEffect(() => { document.title = "Settings — CalBuddy"; }, []);
 
   useEffect(() => {
     if (!user) return;
     getProfile(user.id).then((p) => {
       if (!p) return;
       setProfile(p);
+      if (p.canvas_api_token) setCanvasToken(p.canvas_api_token);
       const s = (p.settings ?? {}) as Profile['settings'];
       setAutoSync(s.autoSync ?? true);
       setBreakDown(s.breakDownAssignments ?? true);
@@ -57,14 +68,23 @@ export function Settings() {
         autoSync,
         breakDownAssignments: breakDown,
         syncAnnouncements,
-        timeEstimation: timeEst as any,
-        workloadPreference: workload as any,
-        weekStartDay: weekStart as any,
+        timeEstimation: timeEst,
+        workloadPreference: workload,
+        weekStartDay: weekStart,
       },
     });
     setSaving(false);
     setSaveMsg(error ? `Error: ${error}` : "Preferences saved.");
     setTimeout(() => setSaveMsg(null), 3000);
+  };
+
+  const handleSaveCanvasToken = async () => {
+    if (!user) return;
+    setSavingToken(true);
+    const { error } = await updateProfile(user.id, { canvas_api_token: canvasToken.trim() || null });
+    setSavingToken(false);
+    setTokenMsg(error ? `Error: ${error}` : "Token saved.");
+    setTimeout(() => setTokenMsg(null), 3000);
   };
 
   const handleSignOut = async () => {
@@ -203,30 +223,94 @@ export function Settings() {
             <div className="p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-1">Canvas Integration</h2>
               <p className="text-sm text-neutral-600 mb-6">
-                Your Canvas account is connected and actively syncing coursework.
+                Enter your Canvas personal access token to enable coursework sync.{" "}
+                <a
+                  href="https://bcourses.berkeley.edu/profile/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  Get your token ↗
+                </a>{" "}
+                (bCourses → Account → Settings → New Access Token)
               </p>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <div className="size-8 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="size-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-green-900 mb-1">Connected: Canvas (UC Berkeley)</div>
-                    <div className="text-sm text-green-700">Last synced: 2 minutes ago</div>
-                    <div className="text-sm text-green-700 mt-1">4 courses · 23 active assignments</div>
+              {profile?.canvas_api_token ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Check className="size-5 text-white" />
+                    </div>
+                    <div className="font-medium text-green-900">Canvas token saved</div>
                   </div>
                 </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+                  <AlertCircle className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-amber-800">No token saved — sync will fail until you add one.</div>
+                </div>
+              )}
+
+              <div className="flex gap-2 mb-3">
+                <div className="relative flex-1">
+                  <input
+                    type={showToken ? "text" : "password"}
+                    value={canvasToken}
+                    onChange={(e) => setCanvasToken(e.target.value)}
+                    placeholder="Paste your Canvas access token"
+                    className="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowToken(!showToken)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  >
+                    {showToken ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                <Button
+                  onClick={handleSaveCanvasToken}
+                  disabled={savingToken || !canvasToken.trim()}
+                  className="bg-neutral-900 hover:bg-neutral-800 text-white"
+                >
+                  {savingToken ? "Saving…" : "Save"}
+                </Button>
               </div>
+              {tokenMsg && (
+                <p className={`text-sm mb-3 ${tokenMsg.startsWith("Error") ? "text-red-600" : "text-green-700"}`}>
+                  {tokenMsg}
+                </p>
+              )}
 
               <div className="flex gap-3">
-                <Button variant="outline" className="border-neutral-300">
+                <Button
+                  variant="outline"
+                  className="border-neutral-300"
+                  onClick={() => navigate("/sync")}
+                  disabled={!profile?.canvas_api_token}
+                >
                   <RefreshCw className="size-4 mr-2" />
-                  Re-Sync Coursework
+                  Sync Coursework Now
                 </Button>
-                <Button variant="outline" className="border-neutral-300 text-red-600 hover:text-red-700">
-                  Disconnect Canvas
-                </Button>
+                {profile?.canvas_api_token && (
+                  <Button
+                    variant="outline"
+                    className="border-neutral-300 text-red-600 hover:text-red-700"
+                    onClick={async () => {
+                      setSavingToken(true);
+                      const { error } = await updateProfile(user!.id, { canvas_api_token: null });
+                      setSavingToken(false);
+                      if (!error) {
+                        setCanvasToken("");
+                        setProfile((p) => p ? { ...p, canvas_api_token: null } : p);
+                      }
+                      setTokenMsg(error ? `Error: ${error}` : "Canvas disconnected.");
+                      setTimeout(() => setTokenMsg(null), 3000);
+                    }}
+                  >
+                    Disconnect Canvas
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -292,7 +376,7 @@ export function Settings() {
                 </label>
                 <select
                   value={timeEst}
-                  onChange={(e) => setTimeEst(e.target.value)}
+                  onChange={(e) => setTimeEst(e.target.value as 'conservative' | 'moderate' | 'aggressive')}
                   className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
                 >
                   <option value="conservative">Conservative (add 25% buffer)</option>
@@ -304,7 +388,7 @@ export function Settings() {
                 <label className="text-sm font-medium text-neutral-900 mb-2 block">Workload preference</label>
                 <select
                   value={workload}
-                  onChange={(e) => setWorkload(e.target.value)}
+                  onChange={(e) => setWorkload(e.target.value as 'balanced' | 'front-loaded' | 'back-loaded')}
                   className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
                 >
                   <option value="balanced">Balanced (spread evenly)</option>
@@ -316,7 +400,7 @@ export function Settings() {
                 <label className="text-sm font-medium text-neutral-900 mb-2 block">Week start day</label>
                 <select
                   value={weekStart}
-                  onChange={(e) => setWeekStartDay(e.target.value)}
+                  onChange={(e) => setWeekStartDay(e.target.value as 'sunday' | 'monday')}
                   className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
                 >
                   <option value="sunday">Sunday</option>

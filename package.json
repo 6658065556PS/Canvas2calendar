@@ -8,6 +8,8 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@upstash/qstash": "^2.7.0",
+    "@vercel/node": "^5.0.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.5",

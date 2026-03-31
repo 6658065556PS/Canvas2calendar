@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ArrowRight, Check, ChevronRight } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -9,6 +9,8 @@ export function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [email, setEmail] = useState("");
+
+  useEffect(() => { document.title = "CalBuddy"; }, []);
   const [submitted, setSubmitted] = useState(false);
   const [waitlistError, setWaitlistError] = useState<string | null>(null);
 

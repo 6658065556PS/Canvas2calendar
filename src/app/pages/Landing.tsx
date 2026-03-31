@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -68,6 +68,8 @@ export function Landing() {
   const navigate = useNavigate();
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDecomposeModal, setShowDecomposeModal] = useState(false);
+
+  useEffect(() => { document.title = "CalBuddy — Focus your coursework"; }, []);
 
   const handleAssignmentClick = (assignment: Assignment) => {
     // Only "Stay Current 7 - 8" is clickable
