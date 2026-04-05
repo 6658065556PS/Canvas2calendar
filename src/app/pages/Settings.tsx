@@ -33,6 +33,7 @@ export function Settings() {
   const [showToken, setShowToken] = useState(false);
   const [savingToken, setSavingToken] = useState(false);
   const [tokenMsg, setTokenMsg] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   // Local copies of toggle states
   const [autoSync, setAutoSync] = useState(true);
@@ -90,6 +91,27 @@ export function Settings() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleSyncNow = async () => {
+    if (!user || !profile?.canvas_api_token) return;
+    setSyncing(true);
+    setTokenMsg(null);
+    try {
+      const res = await fetch("/api/canvas/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? `Sync failed (${res.status})`);
+      setTokenMsg("Sync started — assignments will appear shortly.");
+    } catch (err) {
+      setTokenMsg(err instanceof Error ? `Error: ${err.message}` : "Sync failed.");
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setTokenMsg(null), 4000);
+    }
   };
 
   const gcalConnected = !!providerToken;
@@ -289,11 +311,11 @@ export function Settings() {
                 <Button
                   variant="outline"
                   className="border-neutral-300"
-                  onClick={() => navigate("/sync")}
-                  disabled={!profile?.canvas_api_token}
+                  onClick={handleSyncNow}
+                  disabled={!profile?.canvas_api_token || syncing}
                 >
-                  <RefreshCw className="size-4 mr-2" />
-                  Sync Coursework Now
+                  <RefreshCw className={`size-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                  {syncing ? "Syncing…" : "Sync Coursework Now"}
                 </Button>
                 {profile?.canvas_api_token && (
                   <Button

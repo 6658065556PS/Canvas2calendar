@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, CalendarCheck, ChevronRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { updateProfile } from "../../lib/database";
 
 type SyncMethod = "ical" | "apikey";
-type SyncStatus = "idle" | "syncing" | "done" | "error";
+type SyncStatus = "idle" | "syncing" | "done" | "gcal" | "error";
 
 // Canvas/bCourses stylized "C" logo
 function CanvasLogo({ size = 32 }: { size?: number }) {
@@ -41,7 +41,7 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 
 export function Sync() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, connectGoogleCalendar } = useAuth();
   const [method, setMethod] = useState<SyncMethod>("ical");
   const [feedUrl, setFeedUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
@@ -68,7 +68,7 @@ export function Sync() {
       }
 
       setStatus("done");
-      setTimeout(() => navigate("/decomposition"), 1500);
+      setTimeout(() => setStatus("gcal"), 1500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
       setStatus("error");
@@ -98,7 +98,7 @@ export function Sync() {
       }
 
       setStatus("done");
-      setTimeout(() => navigate("/decomposition"), 1500);
+      setTimeout(() => setStatus("gcal"), 1500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
       setStatus("error");
@@ -141,6 +141,42 @@ export function Sync() {
           </div>
           <h2 className="text-xl font-semibold text-neutral-900 mb-1.5">Connected!</h2>
           <p className="text-neutral-500 text-sm">Taking you to your assignments…</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (status === "gcal") {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[420px] text-center"
+        >
+          <div className="mx-auto mb-5 size-14 bg-[#003262] rounded-full flex items-center justify-center">
+            <CalendarCheck className="size-7 text-[#FDB515]" />
+          </div>
+          <h2 className="text-xl font-semibold text-neutral-900 mb-2">Connect Google Calendar</h2>
+          <p className="text-neutral-500 text-sm mb-8">
+            Sync your tasks to Google Calendar so they show up alongside your classes and events.
+          </p>
+          <button
+            onClick={() => {
+              sessionStorage.setItem("calbuddy_next", "/decomposition");
+              connectGoogleCalendar();
+            }}
+            className="w-full py-[14px] bg-[#003262] text-white rounded-2xl text-sm font-semibold hover:bg-[#002347] transition-colors mb-3 flex items-center justify-center gap-2"
+          >
+            <CalendarCheck className="size-4" />
+            Connect Google Calendar
+          </button>
+          <button
+            onClick={() => navigate("/decomposition")}
+            className="w-full py-[14px] text-neutral-400 text-sm hover:text-neutral-600 transition-colors flex items-center justify-center gap-1"
+          >
+            Skip for now <ChevronRight className="size-4" />
+          </button>
         </motion.div>
       </div>
     );

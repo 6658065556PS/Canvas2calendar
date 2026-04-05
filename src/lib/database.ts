@@ -131,7 +131,7 @@ export async function updateTask(
 }
 
 export async function toggleTaskCompletion(taskId: string, completed: boolean): Promise<void> {
-  await supabase.from('tasks').update({ completed }).eq('id', taskId)
+  await supabase.from('tasks').update({ completed, updated_at: new Date().toISOString() }).eq('id', taskId)
 }
 
 export async function deleteTask(taskId: string): Promise<void> {

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
-import { AppNav } from "../components/AppNav";
+import { SidebarLayout } from "../components/Sidebar";
 
 interface RawAssignment {
   id: string;
@@ -838,8 +838,10 @@ function DecompositionContent() {
 
 export function Decomposition() {
   return (
-    <DndProvider backend={HTML5Backend}>
-      <DecompositionContent />
-    </DndProvider>
+    <SidebarLayout>
+      <DndProvider backend={HTML5Backend}>
+        <DecompositionContent />
+      </DndProvider>
+    </SidebarLayout>
   );
 }

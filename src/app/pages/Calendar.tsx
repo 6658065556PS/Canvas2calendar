@@ -414,7 +414,12 @@ function CalendarCell({
 export function Calendar() {
   const navigate  = useNavigate();
   const { user, providerToken } = useAuth();
-  const weekStart = getWeekStart();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekStart = (() => {
+    const base = new Date(getWeekStart() + "T00:00:00");
+    base.setDate(base.getDate() + weekOffset * 7);
+    return base.toISOString().split("T")[0];
+  })();
 
   const [schedule, setSchedule] = useState<Record<string, Record<string, CalTask[]>>>(() => {
     const s: Record<string, Record<string, CalTask[]>> = {};
@@ -545,7 +550,7 @@ export function Calendar() {
   // ── Google Calendar sync ────────────────────────────────────────────────────
   const handleGCalSync = async () => {
     if (!providerToken) {
-      setSyncMessage("Re-sign in to grant Google Calendar access.");
+      navigate("/settings");
       return;
     }
     setSyncing(true);
@@ -609,11 +614,11 @@ export function Calendar() {
         {/* Week nav sub-bar */}
         <div className="border-b border-neutral-200 bg-white px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="border-neutral-200 h-7 w-7 p-0" aria-label="Previous week">
+            <Button variant="outline" size="sm" className="border-neutral-200 h-7 w-7 p-0" aria-label="Previous week" onClick={() => setWeekOffset((o) => o - 1)}>
               <ChevronLeft className="size-3.5" />
             </Button>
             <span className="text-sm font-medium text-neutral-700 min-w-[130px] text-center">{currentWeek}</span>
-            <Button variant="outline" size="sm" className="border-neutral-200 h-7 w-7 p-0" aria-label="Next week">
+            <Button variant="outline" size="sm" className="border-neutral-200 h-7 w-7 p-0" aria-label="Next week" onClick={() => setWeekOffset((o) => o + 1)}>
               <ChevronRight className="size-3.5" />
             </Button>
           </div>

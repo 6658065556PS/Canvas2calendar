@@ -34,6 +34,15 @@ export function AuthCallback() {
         })
       }
 
+      // If we were mid-flow (e.g. connecting Google Calendar during setup),
+      // honour the stored destination instead of the default routing.
+      const pendingNext = sessionStorage.getItem('calbuddy_next')
+      if (pendingNext) {
+        sessionStorage.removeItem('calbuddy_next')
+        navigate(pendingNext, { replace: true })
+        return
+      }
+
       // Check if this user has completed onboarding
       const profile = await getProfile(userId)
       if (!profile || !profile.onboarding_completed) {

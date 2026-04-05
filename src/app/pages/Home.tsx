@@ -1,6 +1,9 @@
 import { useNavigate } from "react-router";
-import { ArrowRight, Star, Facebook, Instagram, Youtube } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "../components/ui/button";
+
+const CAMPANILE_IMAGE = "https://images.unsplash.com/photo-1583720464836-0f5ff417c4eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxVQyUyMEJlcmtlbGV5JTIwQ2FtcGFuaWxlJTIwdG93ZXJ8ZW58MXx8fHwxNzc1MzYyNDAwfDA&ixlib=rb-4.1.0&q=80&w=1080";
+const BEAR_IMAGE = "https://images.unsplash.com/photo-1742855966306-c35f1953cb8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDYWxpZm9ybmlhJTIwZ29sZGVuJTIwYmVhciUyMG1hc2NvdHxlbnwxfHx8fDE3NzUzNjI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080";
 
 export function Home() {
   const navigate = useNavigate();
@@ -21,11 +24,11 @@ export function Home() {
           <div className="flex items-center gap-3">
             <span className="hidden md:block text-sm text-[#717182]">University Edition</span>
             <Button
-              onClick={() => navigate("/landing")}
+              onClick={() => navigate("/auth")}
               className="bg-[#FFB618] hover:bg-[#7D5700] text-[#001D3D] rounded-lg px-6"
               style={{ fontFamily: 'var(--font-sans)' }}
             >
-              Get Started
+              Berkeley Log in
             </Button>
           </div>
         </div>
@@ -35,21 +38,18 @@ export function Home() {
       <section className="hidden md:block relative bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="relative h-[500px]">
-            {/* Campanile placeholder — Berkeley Blue gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#003262] via-[#005699] to-[#001D3D]">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white opacity-60" />
+            <div className="absolute inset-0">
+              <img
+                src={CAMPANILE_IMAGE}
+                alt="UC Berkeley Campanile"
+                className="w-full h-full object-cover opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" />
             </div>
 
             {/* Content Overlay */}
             <div className="relative h-full flex flex-col justify-end px-12 pb-12">
-              {/* Berkeley Standard Badge */}
               <div className="bg-white rounded-lg p-6 max-w-xl mb-8 shadow-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-5 h-5 text-[#7D5700]" fill="#7D5700" />
-                  <span className="text-sm font-semibold text-[#7D5700] tracking-wide" style={{ fontFamily: 'var(--font-sans)' }}>
-                    BERKELEY STANDARD
-                  </span>
-                </div>
                 <p className="text-2xl italic mb-4" style={{ fontFamily: 'var(--font-serif)', color: '#1A1C1C' }}>
                   "Fiat Lux – Let there be light in your schedule."
                 </p>
@@ -60,7 +60,7 @@ export function Home() {
                   Empowering UC Berkeley students with AI-driven clarity and accountability.
                 </p>
                 <Button
-                  onClick={() => navigate("/landing")}
+                  onClick={() => navigate("/auth")}
                   className="bg-[#FFB618] hover:bg-[#7D5700] text-[#001D3D] rounded-lg px-8 py-6 text-lg"
                   style={{ fontFamily: 'var(--font-sans)' }}
                 >
@@ -77,20 +77,13 @@ export function Home() {
                 </div>
               </div>
 
-              {/* Trust Badges */}
+              {/* Trust Badge */}
               <div className="flex items-center gap-8 text-sm text-[#717182]">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
                   </svg>
                   <span>SECURE DATA</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span>ASUC APPROVED</span>
                 </div>
               </div>
             </div>
@@ -110,7 +103,7 @@ export function Home() {
               Study Smarter, The Cal Way
             </h1>
             <Button
-              onClick={() => navigate("/landing")}
+              onClick={() => navigate("/auth")}
               className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-full px-8 py-6 text-lg mb-4"
               style={{ fontFamily: 'var(--font-sans)' }}
             >
@@ -118,11 +111,12 @@ export function Home() {
             </Button>
           </div>
 
-          {/* Cal Bear placeholder */}
-          <div className="relative mb-8 flex items-center justify-center">
-            <div className="w-64 h-64 bg-gradient-to-br from-[#FFB618] to-[#7D5700] rounded-full flex items-center justify-center">
-              <span className="text-8xl font-black text-[#001D3D]" style={{ fontFamily: 'var(--font-serif)' }}>Cal</span>
-            </div>
+          <div className="relative mb-8">
+            <img
+              src={BEAR_IMAGE}
+              alt="Cal Bear Mascot"
+              className="w-full max-w-md mx-auto"
+            />
           </div>
         </div>
       </section>
@@ -130,7 +124,6 @@ export function Home() {
       {/* Features Section */}
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
-          {/* Mobile heading */}
           <div className="md:hidden mb-12 text-center">
             <h2 className="text-3xl mb-4" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D' }}>
               Study smart the SCET way.
@@ -140,7 +133,6 @@ export function Home() {
             </p>
           </div>
 
-          {/* Desktop heading */}
           <div className="hidden md:block mb-16 text-center">
             <h2 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D' }}>
               Study smart the SCET way.
@@ -151,8 +143,7 @@ export function Home() {
           </div>
 
           {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {/* Feature 1: AI Breakdown */}
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl p-8 border-4 border-[#FFB618]">
               <div className="w-20 h-20 bg-[#FFB618] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-[#001D3D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +158,6 @@ export function Home() {
               </p>
             </div>
 
-            {/* Feature 2: Smart Scheduling */}
             <div className="bg-white rounded-2xl p-8 border-4 border-[#FFB618]">
               <div className="w-20 h-20 bg-[#FFB618] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-[#001D3D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +172,6 @@ export function Home() {
               </p>
             </div>
 
-            {/* Feature 3: SCET Events */}
             <div className="bg-white rounded-2xl p-8 border-4 border-[#FFB618]">
               <div className="w-20 h-20 bg-[#FFB618] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-[#001D3D]" fill="currentColor" viewBox="0 0 24 24">
@@ -197,46 +186,12 @@ export function Home() {
               </p>
             </div>
           </div>
-
-          {/* Social Proof */}
-          <div className="text-center mb-8">
-            <p className="text-[#1A1C1C] text-lg mb-6" style={{ fontFamily: 'var(--font-sans)' }}>
-              Join thousands of Cal students using CalBuddy!
-            </p>
-            <Button
-              onClick={() => navigate("/landing")}
-              className="bg-[#F3F3F3] hover:bg-[#EFEFEF] text-[#1A1C1C] rounded-lg px-8 py-6 text-lg"
-              style={{ fontFamily: 'var(--font-sans)' }}
-            >
-              Get Started
-            </Button>
-          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-white border-t border-[#F3F3F3] py-8 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-6 text-sm text-[#1A1C1C]" style={{ fontFamily: 'var(--font-sans)' }}>
-              <button className="hover:text-[#003262]">Features</button>
-              <button className="hover:text-[#003262]">Pricing</button>
-              <button onClick={() => navigate("/auth")} className="hover:text-[#003262]">Login</button>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button className="w-10 h-10 rounded-full bg-[#F3F3F3] hover:bg-[#003262] hover:text-white flex items-center justify-center transition-colors">
-                <Facebook className="w-5 h-5" />
-              </button>
-              <button className="w-10 h-10 rounded-full bg-[#F3F3F3] hover:bg-[#003262] hover:text-white flex items-center justify-center transition-colors">
-                <Instagram className="w-5 h-5" />
-              </button>
-              <button className="w-10 h-10 rounded-full bg-[#F3F3F3] hover:bg-[#003262] hover:text-white flex items-center justify-center transition-colors">
-                <Youtube className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <div className="max-w-6xl mx-auto" />
       </footer>
     </div>
   );

@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
-import { CheckSquare, Square, BookOpen, CalendarDays, RefreshCw } from "lucide-react";
+import { CheckSquare, BookOpen, CalendarDays, RefreshCw, Flame, Calendar as CalIcon } from "lucide-react";
 import { SidebarLayout } from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { getTasks, toggleTaskCompletion } from "../../lib/database";
@@ -19,42 +10,29 @@ import type { Task } from "../../lib/types";
 const BERKELEY_BLUE = "#003262";
 const CAL_GOLD = "#FDB515";
 
-// Weekly momentum data — computed from real task completions when available,
-// otherwise shows a motivational sample curve.
-const SAMPLE_MOMENTUM = [
-  { day: "Mon", pct: 5 },
-  { day: "Tue", pct: 20 },
-  { day: "Wed", pct: 40 },
-  { day: "Thu", pct: 50 },
-  { day: "Fri", pct: 60 },
-  { day: "Sat", pct: 80 },
-  { day: "Sun", pct: 92 },
-];
+const FINALS_DATE = new Date("2026-05-08T00:00:00");
 
-function buildWeeklyMomentum(tasks: Task[]) {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function daysUntilFinals(): number {
   const today = new Date();
-  // Find Monday of current week
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-  monday.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.ceil((FINALS_DATE.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+}
 
-  return days.map((day, i) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
-
-    // Tasks due on or before this day
-    const dueSoFar = tasks.filter(t => {
-      const due = t.suggested_date?.split("T")[0];
-      return due && due <= dateStr;
-    });
-    const completedSoFar = dueSoFar.filter(t => t.completed);
-    const pct = dueSoFar.length > 0
-      ? Math.round((completedSoFar.length / dueSoFar.length) * 100)
-      : 0;
-    return { day, pct };
-  });
+function computeStreak(tasks: Task[]): number {
+  const completedDates = new Set(
+    tasks.filter(t => t.completed && t.updated_at).map(t => t.updated_at.split("T")[0])
+  );
+  if (completedDates.size === 0) return 0;
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if (completedDates.has(d.toISOString().split("T")[0])) { streak++; }
+    else if (i > 0) { break; }
+  }
+  return streak;
 }
 
 export function Dashboard() {
@@ -75,8 +53,8 @@ export function Dashboard() {
   const completedCount = tasks.filter(t => t.completed).length;
   const completionPct = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
-  const momentumData = tasks.length > 0 ? buildWeeklyMomentum(tasks) : SAMPLE_MOMENTUM;
-  const highFocusDays = momentumData.filter(d => d.pct >= 60).length;
+  const streak = computeStreak(tasks);
+  const days = daysUntilFinals();
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const firstName = (profile?.full_name ?? user?.user_metadata?.full_name as string | undefined)
@@ -195,56 +173,25 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* ── Weekly Momentum ─────────────────────────────────────── */}
+        {/* ── Streak + Finals ─────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <div className="bg-white rounded-2xl shadow-sm px-5 py-5">
-            <h2 className="text-[17px] font-bold mb-4" style={{ color: BERKELEY_BLUE }}>
-              WEEKLY MOMENTUM
-            </h2>
-
-            <ResponsiveContainer width="100%" height={190}>
-              <AreaChart data={momentumData} margin={{ top: 6, right: 4, left: -22, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={CAL_GOLD} stopOpacity={0.28} />
-                    <stop offset="95%" stopColor={CAL_GOLD} stopOpacity={0.03} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 12, fill: "#6b7280" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tickFormatter={v => `${v}%`}
-                  tick={{ fontSize: 11, fill: "#9ca3af" }}
-                  axisLine={false}
-                  tickLine={false}
-                  domain={[0, 100]}
-                  ticks={[0, 20, 40, 60, 80, 100]}
-                />
-                <Tooltip
-                  formatter={(v: number) => [`${v}%`, "Completion"]}
-                  contentStyle={{ borderRadius: 10, border: "none", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 13 }}
-                  cursor={{ stroke: CAL_GOLD, strokeWidth: 1, strokeDasharray: "4 2" }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="pct"
-                  stroke={CAL_GOLD}
-                  strokeWidth={3}
-                  fill="url(#goldGrad)"
-                  dot={{ fill: CAL_GOLD, strokeWidth: 0, r: 5 }}
-                  activeDot={{ r: 7, fill: CAL_GOLD, strokeWidth: 2, stroke: "white" }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-
-            <p className="text-center text-[14px] font-medium text-neutral-700 mt-3">
-              On Track: {highFocusDays} of 7 Days with High Focus
-            </p>
+          <div className="bg-white rounded-2xl shadow-sm px-5 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[15px]"
+                style={{ backgroundColor: CAL_GOLD, color: BERKELEY_BLUE }}
+              >
+                <Flame className="size-4" />
+                {streak} Day Streak
+              </div>
+              <p className="text-[11px] font-medium text-neutral-500 leading-tight max-w-[70px]">
+                Study<br />Streak
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-base font-semibold" style={{ color: BERKELEY_BLUE }}>
+              <CalIcon className="size-5" style={{ color: CAL_GOLD }} />
+              {days} Days Until Finals
+            </div>
           </div>
         </motion.div>
 
