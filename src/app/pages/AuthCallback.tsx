@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { supabase } from '../../lib/supabase'
-import { getProfile } from '../../lib/database'
+import { getProfile, updateProfile } from '../../lib/database'
 import { Loader2 } from 'lucide-react'
 
 export function AuthCallback() {
@@ -22,6 +22,16 @@ export function AuthCallback() {
       if (!userId) {
         navigate('/auth', { replace: true })
         return
+      }
+
+      // Persist the Google provider_token so it survives page reloads.
+      // Supabase only exposes it on this session object — subsequent getSession()
+      // calls return it as null.
+      if (data.session?.provider_token) {
+        await updateProfile(userId, {
+          google_access_token: data.session.provider_token,
+          google_token_saved_at: new Date().toISOString(),
+        })
       }
 
       // Check if this user has completed onboarding

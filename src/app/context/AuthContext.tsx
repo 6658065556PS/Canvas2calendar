@@ -4,11 +4,21 @@ import { supabase } from '../../lib/supabase'
 import { getProfile, upsertProfile } from '../../lib/database'
 import type { Profile } from '../../lib/types'
 
+// Google provider_token expires ~60 minutes after issue.
+// We treat tokens older than 50 minutes as expired to give a safety buffer.
+const GCAL_TOKEN_TTL_MS = 50 * 60 * 1000
+
+function isStoredTokenValid(savedAt: string | null): boolean {
+  if (!savedAt) return false
+  return Date.now() - new Date(savedAt).getTime() < GCAL_TOKEN_TTL_MS
+}
+
 interface AuthContextValue {
   user: User | null
   session: Session | null
   loading: boolean
-  providerToken: string | null
+  providerToken: string | null       // valid Google access token, or null
+  gcalTokenExpired: boolean          // true when stored token is too old → prompt re-auth
   profile: Profile | null
   profileLoading: boolean
   signInWithGoogle: () => Promise<void>
@@ -21,6 +31,7 @@ const AuthContext = createContext<AuthContextValue>({
   session: null,
   loading: true,
   providerToken: null,
+  gcalTokenExpired: false,
   profile: null,
   profileLoading: true,
   signInWithGoogle: async () => {},
@@ -92,12 +103,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null)
   }
 
+  // Derive the best available Google access token:
+  // 1. Fresh from the current session (only present right after OAuth callback)
+  // 2. Persisted in the profile row (survives page reloads, valid for ~50 min)
+  const sessionToken = session?.provider_token ?? null
+  const storedToken  = profile?.google_access_token ?? null
+  const storedSavedAt = profile?.google_token_saved_at ?? null
+
+  const providerToken = sessionToken
+    ?? (isStoredTokenValid(storedSavedAt) ? storedToken : null)
+
+  // gcalTokenExpired is true when we have a stored token but it's too old,
+  // and there's no fresh session token — user needs to re-auth.
+  const gcalTokenExpired = !sessionToken && !!storedToken && !isStoredTokenValid(storedSavedAt)
+
   return (
     <AuthContext.Provider value={{
       user: session?.user ?? null,
       session,
       loading,
-      providerToken: session?.provider_token ?? null,
+      providerToken,
+      gcalTokenExpired,
       profile,
       profileLoading,
       signInWithGoogle,

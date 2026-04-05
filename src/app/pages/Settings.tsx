@@ -22,7 +22,7 @@ import type { Profile } from "../../lib/types";
 
 export function Settings() {
   const navigate = useNavigate();
-  const { user, session, providerToken, signOut, signInWithGoogle } = useAuth();
+  const { user, session, providerToken, gcalTokenExpired, signOut, signInWithGoogle } = useAuth();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
@@ -92,7 +92,6 @@ export function Settings() {
     navigate("/");
   };
 
-  // Google Calendar is connected when the current session has a provider_token
   const gcalConnected = !!providerToken;
 
   return (
@@ -183,9 +182,13 @@ export function Settings() {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium text-amber-900 mb-1">Google Calendar not connected</div>
+                      <div className="font-medium text-amber-900 mb-1">
+                        {gcalTokenExpired ? "Google Calendar access expired" : "Google Calendar not connected"}
+                      </div>
                       <div className="text-sm text-amber-700 mb-3">
-                        Sign in again to grant Google Calendar permission.
+                        {gcalTokenExpired
+                          ? "Your access token expired (valid ~1 hour). Sign in again to restore calendar sync."
+                          : "Sign in again to grant Google Calendar permission."}
                       </div>
                       <Button
                         onClick={signInWithGoogle}

@@ -34,6 +34,10 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute><Coursework /></ProtectedRoute>,
   },
   {
+    path: "/courses",
+    element: <ProtectedRoute><Coursework /></ProtectedRoute>,
+  },
+  {
     path: "/sync",
     element: <ProtectedRoute><Sync /></ProtectedRoute>,
   },

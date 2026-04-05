@@ -1,4 +1,4 @@
-# CalBuddy — Design Specification
+# Canvas2Calendar — Design Specification
 
 ## Design System
 
@@ -35,7 +35,7 @@
 
 ### Desktop (220px wide, fixed left, full height)
 - Background: Berkeley Blue `#003262`
-- **Top:** Cal Gold graduation-cap icon + "CalBuddy" white bold text
+- **Top:** Cal Gold graduation-cap icon + "Canvas2Calendar" white bold text
 - **Nav items** (14px medium, vertical list):
   - Dashboard — LayoutDashboard icon
   - Courses — BookOpen icon
@@ -64,7 +64,7 @@ Centered layout, white background, max-width 400px.
 | Element | Spec |
 |---|---|
 | Monogram | "B" or Berkeley seal, 40px, Berkeley Blue |
-| Heading | "Welcome to CalBuddy" — 22px bold, Berkeley Blue |
+| Heading | "Welcome to Canvas2Calendar" — 22px bold, Berkeley Blue |
 | Subheading | "Your academic accountability partner for UC Berkeley" — 14px gray |
 | Google button | Full width, 48px, white bg, Berkeley Blue border 1.5px, Google logo left, "Continue with Berkeley Google" |
 | SCET badge | Bottom — "Built for SCET students", Berkeley Blue bg, white text, 11px pill |
@@ -81,7 +81,7 @@ Centered, white bg, 3-dot step indicator at top (step 1 active = Berkeley Blue f
 | Element | Spec |
 |---|---|
 | Heading | "What's your role?" — 22px bold |
-| Subheading | "We'll personalize CalBuddy for you" — gray |
+| Subheading | "We'll personalize Canvas2Calendar for you" — gray |
 | Student card | Graduation cap icon, "I'm taking courses this semester", 140px tall, 2px border (Berkeley Blue when selected) |
 | Faculty card | Briefcase icon, "I'm teaching or researching", same size |
 | Continue button | Full width, Berkeley Blue bg, white text, disabled until selection |
@@ -162,7 +162,7 @@ Centered, white background, max-width 420px.
 #### Header bar
 - Full width, Berkeley Blue, 56px tall
 - Left: user avatar (36px circular)
-- Center: "CalBuddy Dashboard" white bold
+- Center: "Canvas2Calendar Dashboard" white bold
 - Right: "CB" monogram in Cal Gold circle
 
 #### Today's Focus card

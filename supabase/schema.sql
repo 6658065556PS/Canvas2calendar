@@ -10,6 +10,8 @@ create table if not exists profiles (
   full_name     text,
   avatar_url    text,
   canvas_api_token text,
+  google_access_token      text,        -- persisted provider_token from Google OAuth
+  google_token_saved_at    timestamptz, -- when the token was captured (expires ~60 min later)
   settings      jsonb default '{
     "autoSync": true,
     "breakDownAssignments": true,

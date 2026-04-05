@@ -252,7 +252,7 @@ export function Dashboard() {
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => navigate("/coursework")}
+              onClick={() => navigate("/courses")}
               className="bg-white rounded-2xl p-4 shadow-sm text-left hover:shadow-md transition-shadow"
             >
               <BookOpen className="size-6 mb-2" style={{ color: CAL_GOLD }} />

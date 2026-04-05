@@ -7,6 +7,8 @@ export interface Profile {
   avatar_url: string | null
   canvas_api_token: string | null
   canvas_feed_url: string | null   // bCourses iCal feed URL (alternative to API token)
+  google_access_token: string | null      // persisted Google OAuth provider_token
+  google_token_saved_at: string | null    // ISO timestamp when token was captured
 
   // ── Onboarding ─────────────────────────────────────────────────────────
   // DB migration required:

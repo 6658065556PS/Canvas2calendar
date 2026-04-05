@@ -7,7 +7,7 @@ const CAL_GOLD = "#FDB515";
 
 const NAV_ITEMS = [
   { label: "Dashboard",  path: "/dashboard",  Icon: LayoutDashboard },
-  { label: "Courses",    path: "/coursework", Icon: BookOpen },
+  { label: "Courses",    path: "/courses", Icon: BookOpen },
   { label: "Tasks",      path: "/decomposition", Icon: ListChecks },
   { label: "Calendar",   path: "/calendar",   Icon: CalendarDays },
   { label: "Settings",   path: "/settings",   Icon: Settings },
