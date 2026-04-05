@@ -22,6 +22,7 @@ interface AuthContextValue {
   profile: Profile | null
   profileLoading: boolean
   signInWithGoogle: () => Promise<void>
+  connectGoogleCalendar: () => Promise<void>  // optional — requests calendar.events scope
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextValue>({
   profile: null,
   profileLoading: true,
   signInWithGoogle: async () => {},
+  connectGoogleCalendar: async () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
 })
@@ -92,6 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       provider: 'google',
       options: {
         redirectTo: `${import.meta.env.VITE_SITE_URL ?? window.location.origin}/auth/callback`,
+      },
+    })
+  }
+
+  // Separate opt-in flow that requests the calendar.events scope.
+  // Only call this from Settings when the user explicitly wants to connect Google Calendar.
+  const connectGoogleCalendar = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${import.meta.env.VITE_SITE_URL ?? window.location.origin}/auth/callback`,
         scopes: 'https://www.googleapis.com/auth/calendar.events',
       },
     })
@@ -127,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile,
       profileLoading,
       signInWithGoogle,
+      connectGoogleCalendar,
       signOut,
       refreshProfile,
     }}>

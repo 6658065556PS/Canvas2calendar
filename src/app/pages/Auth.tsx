@@ -52,7 +52,7 @@ export function Auth() {
           </button>
 
           <p className="text-xs text-neutral-500 text-center mt-4">
-            Google Calendar access will be requested so tasks can sync to your calendar.
+            Use your Berkeley Google account (@berkeley.edu).
           </p>
         </div>
 

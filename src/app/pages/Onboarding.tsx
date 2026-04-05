@@ -61,7 +61,7 @@ export function Onboarding() {
       scet_courses: opts.courses ?? [],
     })
     await refreshProfile()
-    navigate('/dashboard', { replace: true })
+    navigate('/sync', { replace: true })
   }
 
   const handleRoleSelect = (r: Role) => {

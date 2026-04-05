@@ -22,7 +22,7 @@ import type { Profile } from "../../lib/types";
 
 export function Settings() {
   const navigate = useNavigate();
-  const { user, session, providerToken, gcalTokenExpired, signOut, signInWithGoogle } = useAuth();
+  const { user, session, providerToken, gcalTokenExpired, signOut, connectGoogleCalendar } = useAuth();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
@@ -191,7 +191,7 @@ export function Settings() {
                           : "Sign in again to grant Google Calendar permission."}
                       </div>
                       <Button
-                        onClick={signInWithGoogle}
+                        onClick={connectGoogleCalendar}
                         size="sm"
                         className="bg-neutral-900 hover:bg-neutral-800 text-white"
                       >
