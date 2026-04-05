@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { supabase } from '../../lib/supabase'
-import { getProfile, updateProfile } from '../../lib/database'
+import { updateProfile } from '../../lib/database'
 import { Loader2 } from 'lucide-react'
 
 export function AuthCallback() {
@@ -60,13 +60,7 @@ export function AuthCallback() {
         return
       }
 
-      // Check if this user has completed onboarding
-      const profile = await getProfile(userId)
-      if (!profile || !profile.onboarding_completed) {
-        navigate('/onboarding', { replace: true })
-      } else {
-        navigate('/dashboard', { replace: true })
-      }
+      navigate('/dashboard', { replace: true })
     }
 
     handle()

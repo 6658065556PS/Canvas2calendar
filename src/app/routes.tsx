@@ -9,7 +9,6 @@ import { Settings } from "./pages/Settings";
 import { Auth } from "./pages/Auth";
 import { AuthCallback } from "./pages/AuthCallback";
 import { Workspace } from "./pages/Workspace";
-import { Onboarding } from "./pages/Onboarding";
 import { ComingSoon } from "./pages/ComingSoon";
 import { Dashboard } from "./pages/Dashboard";
 import { Coursework } from "./pages/Coursework";
@@ -21,7 +20,6 @@ export const router = createBrowserRouter([
   { path: "/landing",       Component: Landing },
   { path: "/auth",          Component: Auth },
   { path: "/auth/callback", Component: AuthCallback },
-  { path: "/onboarding",    Component: Onboarding },
   { path: "/coming-soon",   Component: ComingSoon },
 
   // ── Protected routes (require sign-in + completed onboarding) ──────────

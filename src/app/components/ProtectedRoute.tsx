@@ -23,10 +23,5 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />
   }
 
-  // Profile loaded and onboarding not completed → send to onboarding
-  if (profile && !profile.onboarding_completed) {
-    return <Navigate to="/onboarding" replace />
-  }
-
   return <>{children}</>
 }
