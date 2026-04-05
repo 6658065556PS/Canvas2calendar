@@ -55,14 +55,11 @@ export function Home() {
             {/* Content Overlay */}
             <div className="relative h-full flex flex-col justify-end px-12 pb-12">
               <div className="bg-white rounded-lg p-6 max-w-xl mb-8 shadow-lg">
-                <p className="text-2xl italic mb-4" style={{ fontFamily: 'var(--font-serif)', color: '#1A1C1C' }}>
-                  "Fiat Lux – Let there be light in your schedule."
-                </p>
                 <h1 className="text-5xl mb-4" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D', lineHeight: 1.1 }}>
-                  The Intelligent Path to Academic Excellence.
+                  Turn your SCET coursework into organized tasks — automatically.
                 </h1>
                 <p className="text-lg text-[#717182] mb-6" style={{ fontFamily: 'var(--font-sans)' }}>
-                  Empowering UC Berkeley students with AI-driven clarity and accountability.
+                  Stop planning manually. Start executing your SCET classes with clarity and smart timing.
                 </p>
                 <Button
                   onClick={() => navigate("/auth")}
@@ -152,7 +149,7 @@ export function Home() {
               Study smart the SCET way.
             </h2>
             <p className="text-[#717182] text-base" style={{ fontFamily: 'var(--font-sans)' }}>
-              Automation that respects your control.
+              From SCET coursework to structured weekly plans — in one click.
             </p>
           </div>
 
@@ -161,7 +158,7 @@ export function Home() {
               Study smart the SCET way.
             </h2>
             <p className="text-xl text-[#717182]" style={{ fontFamily: 'var(--font-sans)' }}>
-              Automation that respects your control.
+              From SCET coursework to structured weekly plans — in one click.
             </p>
           </div>
 
@@ -170,28 +167,28 @@ export function Home() {
             <div className="bg-white rounded-2xl p-8 border-4 border-[#FFB618]">
               <div className="w-20 h-20 bg-[#FFB618] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-[#001D3D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <h3 className="text-2xl mb-3" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D' }}>
-                AI Breakdown
+                Smart Study Planning
               </h3>
               <p className="text-[#1A1C1C]" style={{ fontFamily: 'var(--font-sans)' }}>
-                Understand complex topics with personalized, AI-powered study aids and summaries.
+                Every assignment becomes a scheduled study block. No more wondering when to start.
               </p>
             </div>
 
             <div className="bg-white rounded-2xl p-8 border-4 border-[#FFB618]">
               <div className="w-20 h-20 bg-[#FFB618] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-[#001D3D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <h3 className="text-2xl mb-3" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D' }}>
-                Smart Scheduling
+                Hidden Task Detection
               </h3>
               <p className="text-[#1A1C1C]" style={{ fontFamily: 'var(--font-sans)' }}>
-                Organize your semester with optimized study plans and deadline reminders.
+                Identifies buried readings, prep work, and easy-to-miss tasks — so nothing slips through.
               </p>
             </div>
 
@@ -202,7 +199,7 @@ export function Home() {
                 </svg>
               </div>
               <h3 className="text-2xl mb-3" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D' }}>
-                SCET Events
+                SCET Events (coming)
               </h3>
               <p className="text-[#1A1C1C]" style={{ fontFamily: 'var(--font-sans)' }}>
                 Stay connected with SCET programming, workshops, and exclusive innovation events.

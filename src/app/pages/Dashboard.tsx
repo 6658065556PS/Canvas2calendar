@@ -311,7 +311,7 @@ export function Dashboard() {
             </div>
             <div>
               <p className="font-semibold text-sm" style={{ color: BERKELEY_BLUE }}>Calendar</p>
-              <p className="text-xs text-neutral-400 mt-0.5">Schedule and manage tasks</p>
+              <p className="text-xs text-neutral-400 mt-0.5">Schedule your tasks and manage deadlines</p>
             </div>
           </button>
         </motion.div>
