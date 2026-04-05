@@ -21,6 +21,8 @@ interface AuthContextValue {
   gcalTokenExpired: boolean          // true when stored token is too old → prompt re-auth
   profile: Profile | null
   profileLoading: boolean
+  signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
   signInWithGoogle: () => Promise<void>
   connectGoogleCalendar: () => Promise<void>  // optional — requests calendar.events scope
   signOut: () => Promise<void>
@@ -35,6 +37,8 @@ const AuthContext = createContext<AuthContextValue>({
   gcalTokenExpired: false,
   profile: null,
   profileLoading: true,
+  signInWithEmail: async () => ({ error: null }),
+  signUpWithEmail: async () => ({ error: null }),
   signInWithGoogle: async () => {},
   connectGoogleCalendar: async () => {},
   signOut: async () => {},
@@ -89,6 +93,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(p)
   }, [session])
 
+  const signInWithEmail = async (email: string, password: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    return { error: error?.message ?? null }
+  }
+
+  const signUpWithEmail = async (email: string, password: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signUp({ email, password })
+    return { error: error?.message ?? null }
+  }
+
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -139,6 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       gcalTokenExpired,
       profile,
       profileLoading,
+      signInWithEmail,
+      signUpWithEmail,
       signInWithGoogle,
       connectGoogleCalendar,
       signOut,

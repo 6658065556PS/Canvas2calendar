@@ -158,24 +158,25 @@ export function Sync() {
             <CalendarCheck className="size-7 text-[#FDB515]" />
           </div>
           <h2 className="text-xl font-semibold text-neutral-900 mb-2">Connect Google Calendar</h2>
-          <p className="text-neutral-500 text-sm mb-8">
+          <p className="text-neutral-500 text-sm mb-2">
             Sync your tasks to Google Calendar so they show up alongside your classes and events.
           </p>
+          <p className="text-xs text-neutral-400 mb-8">Optional — you can connect this later in Settings.</p>
+          <button
+            onClick={() => navigate("/decomposition")}
+            className="w-full py-[14px] bg-[#003262] text-white rounded-2xl text-sm font-semibold hover:bg-[#002347] transition-colors mb-3 flex items-center justify-center gap-2"
+          >
+            Continue to Dashboard <ChevronRight className="size-4" />
+          </button>
           <button
             onClick={() => {
               sessionStorage.setItem("calbuddy_next", "/decomposition");
               connectGoogleCalendar();
             }}
-            className="w-full py-[14px] bg-[#003262] text-white rounded-2xl text-sm font-semibold hover:bg-[#002347] transition-colors mb-3 flex items-center justify-center gap-2"
+            className="w-full py-[14px] border border-neutral-300 text-neutral-700 rounded-2xl text-sm font-medium hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2"
           >
             <CalendarCheck className="size-4" />
-            Connect Google Calendar
-          </button>
-          <button
-            onClick={() => navigate("/decomposition")}
-            className="w-full py-[14px] text-neutral-400 text-sm hover:text-neutral-600 transition-colors flex items-center justify-center gap-1"
-          >
-            Skip for now <ChevronRight className="size-4" />
+            Also connect Google Calendar
           </button>
         </motion.div>
       </div>

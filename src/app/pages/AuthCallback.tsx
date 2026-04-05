@@ -8,16 +8,31 @@ export function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const hash = new URLSearchParams(window.location.hash.slice(1))
-    const access_token = hash.get('access_token')
-    const refresh_token = hash.get('refresh_token')
+    async function handle() {
+      // ── PKCE code exchange (email confirmation links, magic links) ──────────
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        if (error || !data.session) {
+          navigate('/auth', { replace: true })
+          return
+        }
+        await routeAfterSession(data.session.user.id)
+        return
+      }
 
-    if (!access_token || !refresh_token) {
-      navigate('/auth', { replace: true })
-      return
-    }
+      // ── Implicit hash flow (Google OAuth) ───────────────────────────────────
+      const hash = new URLSearchParams(window.location.hash.slice(1))
+      const access_token = hash.get('access_token')
+      const refresh_token = hash.get('refresh_token')
 
-    supabase.auth.setSession({ access_token, refresh_token }).then(async ({ data }) => {
+      if (!access_token || !refresh_token) {
+        navigate('/auth', { replace: true })
+        return
+      }
+
+      const { data } = await supabase.auth.setSession({ access_token, refresh_token })
       const userId = data.session?.user?.id
       if (!userId) {
         navigate('/auth', { replace: true })
@@ -25,8 +40,6 @@ export function AuthCallback() {
       }
 
       // Persist the Google provider_token so it survives page reloads.
-      // Supabase only exposes it on this session object — subsequent getSession()
-      // calls return it as null.
       if (data.session?.provider_token) {
         await updateProfile(userId, {
           google_access_token: data.session.provider_token,
@@ -34,6 +47,10 @@ export function AuthCallback() {
         })
       }
 
+      await routeAfterSession(userId)
+    }
+
+    async function routeAfterSession(userId: string) {
       // If we were mid-flow (e.g. connecting Google Calendar during setup),
       // honour the stored destination instead of the default routing.
       const pendingNext = sessionStorage.getItem('calbuddy_next')
@@ -50,7 +67,9 @@ export function AuthCallback() {
       } else {
         navigate('/dashboard', { replace: true })
       }
-    })
+    }
+
+    handle()
   }, [navigate])
 
   return (
