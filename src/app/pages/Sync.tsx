@@ -42,7 +42,7 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 export function Sync() {
   const navigate = useNavigate();
   const { user, connectGoogleCalendar } = useAuth();
-  const [method, setMethod] = useState<SyncMethod>("ical");
+  const [method, setMethod] = useState<SyncMethod>("apikey");
   const [feedUrl, setFeedUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [status, setStatus] = useState<SyncStatus>("idle");
@@ -62,6 +62,9 @@ export function Sync() {
         body: JSON.stringify({ userId: user?.id, feedUrl: feedUrl.trim() }),
       });
 
+      if (res.status === 404) {
+        throw new Error("Sync API not reachable. Use `vercel dev` instead of `npm run dev` to test this locally.");
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(data.error ?? `Sync failed (${res.status})`);
@@ -92,6 +95,9 @@ export function Sync() {
         body: JSON.stringify({ userId: user.id }),
       });
 
+      if (res.status === 404) {
+        throw new Error("Sync API not reachable. Use `vercel dev` instead of `npm run dev` to test this locally.");
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(data.error ?? `Sync failed (${res.status})`);
@@ -212,68 +218,7 @@ export function Sync() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <AnimatePresence mode="wait">
-        {method === "ical" ? (
-          <motion.div
-            key="ical"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25 }}
-            className="w-full max-w-[420px]"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-center gap-3 mb-10">
-              <CanvasLogo size={34} />
-              <span className="text-[22px] font-semibold text-neutral-900 tracking-tight">bCourses</span>
-            </div>
-
-            {/* Steps */}
-            <ol className="space-y-5 mb-8">
-              <Step n={1}>
-                go to your{" "}
-                <a
-                  href="https://bcourses.berkeley.edu/calendar"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  bCourses calendar
-                </a>
-              </Step>
-              <Step n={2}>click "Calendar Feed" at the bottom right</Step>
-              <Step n={3}>copy the feed URL and paste it below</Step>
-            </ol>
-
-            {/* Input */}
-            <input
-              type="url"
-              value={feedUrl}
-              onChange={(e) => setFeedUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleIcalConnect()}
-              placeholder="paste calendar feed URL"
-              className="w-full px-5 py-[14px] rounded-2xl border border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 text-sm outline-none focus:ring-2 focus:ring-neutral-900 mb-3"
-            />
-
-            {/* Connect button */}
-            <button
-              onClick={handleIcalConnect}
-              disabled={!feedUrl.trim()}
-              className="w-full py-[14px] bg-neutral-900 text-white rounded-2xl text-sm font-semibold hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors mb-5"
-            >
-              connect
-            </button>
-
-            {/* Fallback link */}
-            <p className="text-center text-sm text-neutral-400">
-              <button
-                onClick={() => setMethod("apikey")}
-                className="hover:text-neutral-600 transition-colors"
-              >
-                use API key instead (advanced, more setup required)
-              </button>
-            </p>
-          </motion.div>
-        ) : (
+        {method === "apikey" ? (
           <motion.div
             key="apikey"
             initial={{ opacity: 0, y: 10 }}
@@ -324,13 +269,74 @@ export function Sync() {
               connect
             </button>
 
-            {/* Back link */}
+            {/* Fallback link */}
             <p className="text-center text-sm text-neutral-400">
               <button
                 onClick={() => setMethod("ical")}
                 className="hover:text-neutral-600 transition-colors"
               >
-                use calendar feed instead (simpler)
+                use calendar feed instead (no token required)
+              </button>
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="ical"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className="w-full max-w-[420px]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-center gap-3 mb-10">
+              <CanvasLogo size={34} />
+              <span className="text-[22px] font-semibold text-neutral-900 tracking-tight">bCourses</span>
+            </div>
+
+            {/* Steps */}
+            <ol className="space-y-5 mb-8">
+              <Step n={1}>
+                go to your{" "}
+                <a
+                  href="https://bcourses.berkeley.edu/calendar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  bCourses calendar
+                </a>
+              </Step>
+              <Step n={2}>click "Calendar Feed" at the bottom right</Step>
+              <Step n={3}>copy the feed URL and paste it below</Step>
+            </ol>
+
+            {/* Input */}
+            <input
+              type="url"
+              value={feedUrl}
+              onChange={(e) => setFeedUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleIcalConnect()}
+              placeholder="paste calendar feed URL"
+              className="w-full px-5 py-[14px] rounded-2xl border border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 text-sm outline-none focus:ring-2 focus:ring-neutral-900 mb-3"
+            />
+
+            {/* Connect button */}
+            <button
+              onClick={handleIcalConnect}
+              disabled={!feedUrl.trim()}
+              className="w-full py-[14px] bg-neutral-900 text-white rounded-2xl text-sm font-semibold hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors mb-5"
+            >
+              connect
+            </button>
+
+            {/* Back link */}
+            <p className="text-center text-sm text-neutral-400">
+              <button
+                onClick={() => setMethod("apikey")}
+                className="hover:text-neutral-600 transition-colors"
+              >
+                use API token instead (recommended — full data access)
               </button>
             </p>
           </motion.div>
