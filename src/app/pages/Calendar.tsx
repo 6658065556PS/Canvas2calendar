@@ -22,6 +22,7 @@ import {
   X,
   CheckCircle2,
   Circle,
+  Wand2,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { SidebarLayout } from "../components/Sidebar";
@@ -30,10 +31,12 @@ import {
   getScheduledTasksForWeek,
   getTasks,
   getWeekStart,
+  getProfile,
   saveGoogleEventId,
   updateTask,
   upsertScheduledTask,
 } from "../../lib/database";
+import { parseEstimatedMinutes } from "../../lib/database";
 import { syncWeekToGoogleCalendar } from "../../lib/googleCalendar";
 import type { ScheduledTask, Task as DBTask } from "../../lib/types";
 
@@ -432,6 +435,7 @@ export function Calendar() {
   const [syncing, setSyncing]           = useState(false);
   const [syncMessage, setSyncMessage]   = useState<string | null>(null);
   const [panel, setPanel]               = useState<PanelState | null>(null);
+  const [autoScheduling, setAutoScheduling] = useState(false);
 
   const currentWeek = (() => {
     const d   = new Date(weekStart + "T00:00:00");
@@ -589,6 +593,86 @@ export function Calendar() {
     }
   };
 
+  // ── Auto-schedule ───────────────────────────────────────────────────────────
+  const handleAutoSchedule = async () => {
+    const unscheduledIds = new Set(
+      Object.values(schedule).flatMap((day) => Object.values(day).flatMap((tasks) => tasks.map((t) => t.id)))
+    );
+    const unscheduled = inboxTasks.filter((t) => !unscheduledIds.has(t.id) && !t.completed);
+    if (unscheduled.length === 0) return;
+
+    setAutoScheduling(true);
+
+    // Read user settings
+    const settings = user ? (await getProfile(user.id))?.settings : null;
+    const workload  = settings?.workloadPreference ?? 'balanced';
+    const timeEst   = settings?.timeEstimation ?? 'moderate';
+
+    // Time multiplier per timeEstimation setting
+    const timeMultiplier = timeEst === 'conservative' ? 1.25 : timeEst === 'aggressive' ? 0.85 : 1.0;
+
+    // Day weights per workload preference (Mon–Sun index 0–6, work days only Mon–Fri = 0–4)
+    const dayWeights: Record<string, number[]> = {
+      'balanced':     [1, 1, 1, 1, 1, 0, 0],
+      'front-loaded': [3, 2, 1, 1, 1, 0, 0],
+      'back-loaded':  [1, 1, 1, 2, 3, 0, 0],
+    };
+    const weights = dayWeights[workload];
+
+    // Build a pool of available slots per day (9 AM → 8 PM, 60-min blocks)
+    const workSlots = ["9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM"];
+    const slotsPerDay: Record<string, string[]> = {};
+    daysOfWeek.forEach((day, i) => {
+      if (weights[i] === 0) { slotsPerDay[day] = []; return; }
+      // Remove already-occupied slots
+      const occupied = new Set(Object.keys(schedule[day] ?? {}));
+      const free = workSlots.filter((s) => !occupied.has(s));
+      // Repeat slots proportionally to weight (heavier days get more capacity)
+      slotsPerDay[day] = Array(weights[i]).fill(free).flat();
+    });
+
+    // Flatten into ordered list: distribute proportionally across days
+    const slotQueue: Array<{ day: string; time: string }> = [];
+    const maxRounds = Math.max(...Object.values(slotsPerDay).map((s) => s.length));
+    for (let round = 0; round < maxRounds; round++) {
+      daysOfWeek.forEach((day) => {
+        if (slotsPerDay[day][round]) slotQueue.push({ day, time: slotsPerDay[day][round] });
+      });
+    }
+
+    // Assign tasks — pack by estimated time so long tasks don't crowd one day
+    const newSchedule = structuredClone(schedule) as Record<string, Record<string, CalTask[]>>;
+    let slotIdx = 0;
+
+    for (const task of unscheduled) {
+      if (slotIdx >= slotQueue.length) break;
+      const mins = parseEstimatedMinutes(task.estimatedTime) * timeMultiplier;
+      // Long tasks (>90 min adjusted) get two consecutive slots on the same day
+      const blocksNeeded = mins > 90 ? 2 : 1;
+
+      let placed = false;
+      while (slotIdx < slotQueue.length) {
+        const { day, time } = slotQueue[slotIdx];
+        const nextSlot = slotQueue[slotIdx + 1];
+        if (blocksNeeded === 2 && (!nextSlot || nextSlot.day !== day)) {
+          slotIdx++; continue; // need two consecutive slots on same day
+        }
+        newSchedule[day][time] = [...(newSchedule[day][time] ?? []), task];
+        if (user && task.id.includes("-")) {
+          const fullDay = fullDayNames[daysOfWeek.indexOf(day)];
+          await upsertScheduledTask(user.id, task.id, fullDay, time, weekStart);
+        }
+        slotIdx += blocksNeeded;
+        placed = true;
+        break;
+      }
+      if (!placed) break;
+    }
+
+    setSchedule(newSchedule);
+    setAutoScheduling(false);
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <SidebarLayout>
@@ -660,15 +744,30 @@ export function Calendar() {
                         {inboxTasks.length} task{inboxTasks.length !== 1 ? "s" : ""}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate("/decomposition")}
-                      className="border-neutral-300 text-neutral-700 text-xs"
-                    >
-                      <Plus className="size-3.5 mr-1" />
-                      Add Tasks
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAutoSchedule}
+                        disabled={autoScheduling || inboxTasks.filter(t => !t.completed).length === 0}
+                        className="border-[#003262] text-[#003262] hover:bg-[#003262] hover:text-white text-xs transition-colors"
+                        title="Auto-schedule tasks using your workload preferences"
+                      >
+                        {autoScheduling
+                          ? <Loader2 className="size-3.5 mr-1 animate-spin" />
+                          : <Wand2 className="size-3.5 mr-1" />}
+                        AI Schedule
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate("/decomposition")}
+                        className="border-neutral-300 text-neutral-700 text-xs"
+                      >
+                        <Plus className="size-3.5 mr-1" />
+                        Add Tasks
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="p-3 max-h-[calc(100vh-22rem)] overflow-y-auto">
