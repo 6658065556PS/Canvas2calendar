@@ -467,25 +467,11 @@ export function Calendar() {
       setInboxTasks(dedup(rows.map(toCalTask)));
     });
 
+    // Reset schedule before loading so stale week data doesn't linger
+    setSchedule(() => { const s: Record<string, Record<string, CalTask[]>> = {}; daysOfWeek.forEach((d) => { s[d] = {}; }); return s; });
+
     getScheduledTasksForWeek(user.id, weekStart).then((rows) => {
-      if (rows.length === 0) {
-        const saved = localStorage.getItem("workspaceSchedule");
-        if (saved) {
-          const parsed: Record<string, Record<string, any>> = JSON.parse(saved);
-          const cal: Record<string, Record<string, CalTask[]>> = {};
-          daysOfWeek.forEach((shortDay, idx) => {
-            const fullDay = fullDayNames[idx];
-            cal[shortDay] = {};
-            Object.entries(parsed[fullDay] ?? {}).forEach(([time, task]: [string, any]) => {
-              if (!task) return;
-              const slot = timeSlots.find((t) => t === time) ?? timeSlots[2];
-              cal[shortDay][slot] = [...(cal[shortDay][slot] ?? []), convertToCalendarTask(task)];
-            });
-          });
-          setSchedule(cal);
-        }
-        return;
-      }
+      if (rows.length === 0) return; // no tasks for this week — leave schedule empty
       setScheduledRows(rows);
       const cal: Record<string, Record<string, CalTask[]>> = {};
       daysOfWeek.forEach((d) => { cal[d] = {}; });
@@ -603,80 +589,156 @@ export function Calendar() {
 
   // ── Auto-schedule ───────────────────────────────────────────────────────────
   const handleAutoSchedule = async () => {
-    const unscheduledIds = new Set(
-      Object.values(schedule).flatMap((day) => Object.values(day).flatMap((tasks) => tasks.map((t) => t.id)))
+    const alreadyScheduledIds = new Set(
+      Object.values(schedule).flatMap((d) => Object.values(d).flatMap((tasks) => tasks.map((t) => t.id)))
     );
-    const unscheduled = inboxTasks.filter((t) => !unscheduledIds.has(t.id) && !t.completed);
+    const unscheduled = inboxTasks.filter((t) => !alreadyScheduledIds.has(t.id) && !t.completed);
     if (unscheduled.length === 0) return;
 
     setAutoScheduling(true);
 
     // Read user settings
     const settings = user ? (await getProfile(user.id))?.settings : null;
-    const workload  = settings?.workloadPreference ?? 'balanced';
-    const timeEst   = settings?.timeEstimation ?? 'moderate';
-
-    // Time multiplier per timeEstimation setting
+    const workload = settings?.workloadPreference ?? 'balanced';
+    const timeEst  = settings?.timeEstimation ?? 'moderate';
     const timeMultiplier = timeEst === 'conservative' ? 1.25 : timeEst === 'aggressive' ? 0.85 : 1.0;
 
-    // Day weights per workload preference (Mon–Sun index 0–6, work days only Mon–Fri = 0–4)
-    const dayWeights: Record<string, number[]> = {
-      'balanced':     [1, 1, 1, 1, 1, 0, 0],
-      'front-loaded': [3, 2, 1, 1, 1, 0, 0],
-      'back-loaded':  [1, 1, 1, 2, 3, 0, 0],
+    // Max slots per day before moving to next day (respects workload preference)
+    const maxSlotsPerDay: Record<string, number[]> = {
+      'balanced':     [3, 3, 3, 3, 3, 0, 0],
+      'front-loaded': [5, 4, 3, 2, 2, 0, 0],
+      'back-loaded':  [2, 2, 3, 4, 5, 0, 0],
     };
-    const weights = dayWeights[workload];
+    const dailyCaps = maxSlotsPerDay[workload] ?? maxSlotsPerDay['balanced'];
 
-    // Build a pool of available slots per day (9 AM → 8 PM, 60-min blocks)
-    const workSlots = ["9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM"];
-    const slotsPerDay: Record<string, string[]> = {};
-    daysOfWeek.forEach((day, i) => {
-      if (weights[i] === 0) { slotsPerDay[day] = []; return; }
-      // Remove already-occupied slots
-      const occupied = new Set(Object.keys(schedule[day] ?? {}));
-      const free = workSlots.filter((s) => !occupied.has(s));
-      // Repeat slots proportionally to weight (heavier days get more capacity)
-      slotsPerDay[day] = Array(weights[i]).fill(free).flat();
+    // Work hours ordered by preference (morning-first)
+    const workSlots = [
+      "9:00 AM","10:00 AM","11:00 AM","12:00 PM",
+      "1:00 PM","2:00 PM","3:00 PM","4:00 PM",
+      "5:00 PM","6:00 PM","7:00 PM","8:00 PM",
+    ];
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    // Parse a due-date string ("2026-04-12" or "Apr 12") → Date or null
+    function parseDueDate(s: string | undefined): Date | null {
+      if (!s) return null;
+      const iso = new Date(s + "T00:00:00");
+      if (!isNaN(iso.getTime())) return iso;
+      const human = new Date(`${s} ${today.getFullYear()}`);
+      if (!isNaN(human.getTime())) return human;
+      return null;
+    }
+
+    // Sunday of the week containing `date` — matches getWeekStart() convention
+    function weekStartOf(date: Date): string {
+      const d = new Date(date);
+      d.setDate(d.getDate() - d.getDay());
+      d.setHours(0, 0, 0, 0);
+      return d.toISOString().split("T")[0];
+    }
+
+    // Sort tasks: earliest due date first; no due date goes last
+    const sorted = [...unscheduled].sort((a, b) => {
+      const da = parseDueDate(a.dueDate), db = parseDueDate(b.dueDate);
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da.getTime() - db.getTime();
     });
 
-    // Flatten into ordered list: distribute proportionally across days
-    const slotQueue: Array<{ day: string; time: string }> = [];
-    const maxRounds = Math.max(...Object.values(slotsPerDay).map((s) => s.length));
-    for (let round = 0; round < maxRounds; round++) {
-      daysOfWeek.forEach((day) => {
-        if (slotsPerDay[day][round]) slotQueue.push({ day, time: slotsPerDay[day][round] });
+    // Track occupied slots per (weekStart, shortDay): weekOccupied[wkStart][shortDay] = Set<time>
+    const weekOccupied = new Map<string, Record<string, Set<string>>>();
+
+    // Pre-populate current week from the live schedule state
+    const initWeek = (wkStart: string) => {
+      if (weekOccupied.has(wkStart)) return;
+      const entry: Record<string, Set<string>> = {};
+      daysOfWeek.forEach((d) => { entry[d] = new Set(); });
+      weekOccupied.set(wkStart, entry);
+    };
+    initWeek(weekStart);
+    daysOfWeek.forEach((d) => {
+      Object.entries(schedule[d] ?? {}).forEach(([time, tasks]) => {
+        if (tasks.length > 0) weekOccupied.get(weekStart)![d].add(time);
       });
-    }
+    });
 
-    // Assign tasks — pack by estimated time so long tasks don't crowd one day
-    const newSchedule = structuredClone(schedule) as Record<string, Record<string, CalTask[]>>;
-    let slotIdx = 0;
+    // daysOfWeek index (Mon=0…Sun=6) ↔ JS getDay() (Sun=0, Mon=1…Sat=6)
+    // dayIdx = (jsDay + 6) % 7
+    const placements: Array<{ task: CalTask; day: string; time: string; wkStart: string }> = [];
 
-    for (const task of unscheduled) {
-      if (slotIdx >= slotQueue.length) break;
-      const mins = parseEstimatedMinutes(task.estimatedTime) * timeMultiplier;
-      // Long tasks (>90 min adjusted) get two consecutive slots on the same day
-      const blocksNeeded = mins > 90 ? 2 : 1;
+    for (const task of sorted) {
+      const due = parseDueDate(task.dueDate);
+      // Search from today; stop at due date (or 8 weeks out if no due date)
+      const deadline = due ?? new Date(today.getTime() + 56 * 24 * 60 * 60 * 1000);
+      const estMins  = parseEstimatedMinutes(task.estimatedTime) * timeMultiplier;
+      // Prefer scheduling at least estMins/60 days before deadline, minimum 1 day buffer
+      const bufferDays = Math.max(1, Math.ceil(estMins / 60));
+      const targetBy = new Date(deadline.getTime() - bufferDays * 24 * 60 * 60 * 1000);
+      // Search start: today or (targetBy - 7 days) so we start filling early enough
+      const searchStart = new Date(Math.max(today.getTime(), targetBy.getTime() - 7 * 24 * 60 * 60 * 1000));
 
       let placed = false;
-      while (slotIdx < slotQueue.length) {
-        const { day, time } = slotQueue[slotIdx];
-        const nextSlot = slotQueue[slotIdx + 1];
-        if (blocksNeeded === 2 && (!nextSlot || nextSlot.day !== day)) {
-          slotIdx++; continue; // need two consecutive slots on same day
-        }
-        newSchedule[day][time] = [...(newSchedule[day][time] ?? []), task];
-        if (user && task.id.includes("-")) {
-          const fullDay = fullDayNames[daysOfWeek.indexOf(day)];
-          await upsertScheduledTask(user.id, task.id, fullDay, time, weekStart);
-        }
-        slotIdx += blocksNeeded;
+      // Phase 1: search from searchStart → deadline
+      for (let d = new Date(searchStart); d <= deadline && !placed; d.setDate(d.getDate() + 1)) {
+        const jsDay = d.getDay(); // 0=Sun
+        const dayIdx = (jsDay + 6) % 7; // Mon=0
+        if (dailyCaps[dayIdx] === 0) continue; // weekend (or zero-weight day)
+
+        const shortDay = daysOfWeek[dayIdx];
+        const wkStart  = weekStartOf(d);
+        initWeek(wkStart);
+        const occupied = weekOccupied.get(wkStart)![shortDay];
+
+        // Respect daily cap
+        if (occupied.size >= dailyCaps[dayIdx]) continue;
+
+        const free = workSlots.filter((s) => !occupied.has(s));
+        if (free.length === 0) continue;
+
+        const time = free[0];
+        occupied.add(time);
+        placements.push({ task, day: shortDay, time, wkStart });
         placed = true;
-        break;
       }
-      if (!placed) break;
+
+      // Phase 2: fallback — find any free slot starting from today
+      if (!placed) {
+        for (let d = new Date(today); !placed; d.setDate(d.getDate() + 1)) {
+          const jsDay = d.getDay();
+          const dayIdx = (jsDay + 6) % 7;
+          if (dailyCaps[dayIdx] === 0) continue;
+          const shortDay = daysOfWeek[dayIdx];
+          const wkStart  = weekStartOf(d);
+          initWeek(wkStart);
+          const occupied = weekOccupied.get(wkStart)![shortDay];
+          const free = workSlots.filter((s) => !occupied.has(s));
+          if (free.length > 0) {
+            const time = free[0];
+            occupied.add(time);
+            placements.push({ task, day: shortDay, time, wkStart });
+            placed = true;
+          }
+        }
+      }
     }
 
+    // Persist to DB and update UI for current week only
+    const newSchedule = structuredClone(schedule) as Record<string, Record<string, CalTask[]>>;
+    const dbWrites: Promise<any>[] = [];
+
+    for (const { task, day, time, wkStart } of placements) {
+      if (wkStart === weekStart) {
+        newSchedule[day][time] = [...(newSchedule[day][time] ?? []), task];
+      }
+      if (user && task.id.includes("-")) {
+        const fullDay = fullDayNames[daysOfWeek.indexOf(day)];
+        dbWrites.push(upsertScheduledTask(user.id, task.id, fullDay, time, wkStart));
+      }
+    }
+
+    await Promise.all(dbWrites);
     setSchedule(newSchedule);
     setAutoScheduling(false);
   };
