@@ -70,8 +70,9 @@ const ItemType = "TASK";
 const daysOfWeek   = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const fullDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const timeSlots = [
-  "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM",
+  "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
+  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM",
+  "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM",
 ];
 
 const categoryConfig: Record<string, {
@@ -400,7 +401,7 @@ function CalendarCell({
     <div
       ref={drop}
       className={`border-r border-b border-neutral-200 p-1 min-h-[60px] relative ${
-        isToday ? "bg-blue-50/30" : "bg-white"
+        isToday ? "bg-yellow-50/40" : "bg-white"
       } ${isOver ? "bg-blue-100 ring-2 ring-blue-500 ring-inset" : ""} hover:bg-neutral-50/50 transition-colors`}
       aria-label={`${day} at ${time}`}
       role="region"
@@ -437,10 +438,17 @@ export function Calendar() {
   const [panel, setPanel]               = useState<PanelState | null>(null);
   const [autoScheduling, setAutoScheduling] = useState(false);
 
+  // weekStart is Sunday; Mon = +1, …, Sun = +7 (daysOfWeek index 0–6)
+  const weekDates: Date[] = daysOfWeek.map((_, i) => {
+    const d = new Date(weekStart + "T00:00:00");
+    d.setDate(d.getDate() + i + 1);
+    return d;
+  });
+  const todayStr = new Date().toISOString().split("T")[0];
+
   const currentWeek = (() => {
-    const d   = new Date(weekStart + "T00:00:00");
-    const mon = new Date(d); mon.setDate(d.getDate() + 1);
-    const sun = new Date(d); sun.setDate(d.getDate() + 7);
+    const mon = weekDates[0];
+    const sun = weekDates[6];
     const fmt = (dt: Date) => dt.toLocaleString("en-US", { month: "short", day: "numeric" });
     return `${fmt(mon)}–${fmt(sun)}, ${sun.getFullYear()}`;
   })();
@@ -620,7 +628,7 @@ export function Calendar() {
     const weights = dayWeights[workload];
 
     // Build a pool of available slots per day (9 AM → 8 PM, 60-min blocks)
-    const workSlots = ["9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM"];
+    const workSlots = ["9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM"];
     const slotsPerDay: Record<string, string[]> = {};
     daysOfWeek.forEach((day, i) => {
       if (weights[i] === 0) { slotsPerDay[day] = []; return; }
@@ -833,18 +841,24 @@ export function Calendar() {
                   {/* Day headers */}
                   <div className="grid grid-cols-[72px_repeat(7,1fr)] border-b border-neutral-300 bg-neutral-50">
                     <div className="p-3 border-r border-neutral-200" />
-                    {daysOfWeek.map((day, i) => (
-                      <div
-                        key={day}
-                        className={`p-3 text-center border-r border-neutral-200 ${i === 1 ? "bg-blue-50" : ""}`}
-                      >
-                        <div className="text-xs text-neutral-500 mb-0.5">{day}</div>
-                        <div className={`text-lg font-semibold ${i === 1 ? "text-blue-700" : "text-neutral-900"}`}>
-                          {14 + i}
+                    {daysOfWeek.map((day, i) => {
+                      const isToday = weekDates[i].toISOString().split("T")[0] === todayStr;
+                      const dateLabel = weekDates[i].toLocaleString("en-US", { month: "short", day: "numeric" });
+                      return (
+                        <div
+                          key={day}
+                          className={`p-3 text-center border-r border-neutral-200 ${isToday ? "bg-yellow-50" : ""}`}
+                        >
+                          <div className={`text-xs font-semibold mb-0.5 ${isToday ? "text-[#FDB515]" : "text-neutral-500"}`}>{day}</div>
+                          <div className={`text-lg font-bold ${isToday ? "text-[#FDB515]" : "text-neutral-900"}`}>
+                            {weekDates[i].getDate()}
+                          </div>
+                          <div className={`text-[10px] mt-0.5 ${isToday ? "text-[#FDB515] font-semibold" : "text-neutral-400"}`}>
+                            {isToday ? "Today" : dateLabel}
+                          </div>
                         </div>
-                        {i === 1 && <div className="text-[10px] text-blue-600 font-medium mt-0.5">Today</div>}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Time slots */}
@@ -860,7 +874,7 @@ export function Calendar() {
                             day={day}
                             time={time}
                             tasks={schedule[day]?.[time] ?? []}
-                            isToday={i === 1}
+                            isToday={weekDates[i].toISOString().split("T")[0] === todayStr}
                             onDrop={(task) => handleDrop(day, time, task)}
                             onOpen={openPanel}
                           />
