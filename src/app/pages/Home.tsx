@@ -72,12 +72,13 @@ export function Home() {
                   Get Started <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
                 <div className="mt-4">
-                  <button
+                  <Button
                     onClick={() => startDemo(navigate)}
-                    className="text-sm text-[#003262] font-semibold hover:underline"
+                    className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-lg px-8 py-6 text-lg w-full"
+                    style={{ fontFamily: 'var(--font-sans)' }}
                   >
                     Try Demo (no login required) →
-                  </button>
+                  </Button>
                 </div>
                 <div className="mt-3 text-sm text-[#717182]">
                   Already have an account?{" "}
@@ -123,12 +124,13 @@ export function Home() {
               Sync Canvas
             </Button>
             <div className="mt-2">
-              <button
+              <Button
                 onClick={() => startDemo(navigate)}
-                className="text-sm text-[#003262] font-semibold hover:underline"
+                className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-full px-8 py-6 text-lg w-full"
+                style={{ fontFamily: 'var(--font-sans)' }}
               >
                 Try Demo (no login required) →
-              </button>
+              </Button>
             </div>
           </div>
 
