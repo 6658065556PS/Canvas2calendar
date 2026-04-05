@@ -24,7 +24,7 @@ import {
   Circle,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { AppNav } from "../components/AppNav";
+import { SidebarLayout } from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import {
   getScheduledTasksForWeek,
@@ -591,25 +591,9 @@ export function Calendar() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
+    <SidebarLayout>
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-neutral-50">
-
-        <AppNav
-          backTo="/decomposition"
-          rightContent={
-            <Button
-              size="sm"
-              onClick={handleGCalSync}
-              disabled={syncing}
-              className="bg-neutral-900 hover:bg-neutral-800 text-white hidden sm:flex"
-            >
-              {syncing
-                ? <Loader2 className="size-4 mr-2 animate-spin" />
-                : <CalendarCheck className="size-4 mr-2" />}
-              Sync
-            </Button>
-          }
-        />
 
         {/* Week nav sub-bar */}
         <div className="border-b border-neutral-200 bg-white px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
@@ -626,10 +610,10 @@ export function Calendar() {
             size="sm"
             onClick={handleGCalSync}
             disabled={syncing}
-            className="bg-neutral-900 hover:bg-neutral-800 text-white sm:hidden h-7 text-xs"
+            className="bg-neutral-900 hover:bg-neutral-800 text-white h-7 text-xs"
           >
             {syncing ? <Loader2 className="size-3.5 mr-1 animate-spin" /> : <CalendarCheck className="size-3.5 mr-1" />}
-            Sync
+            Sync to Google
           </Button>
         </div>
 
@@ -824,5 +808,6 @@ export function Calendar() {
         </AnimatePresence>
       </div>
     </DndProvider>
+    </SidebarLayout>
   );
 }

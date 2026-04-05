@@ -14,7 +14,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { AppNav } from "../components/AppNav";
+import { SidebarLayout } from "../components/Sidebar";
 import { Separator } from "../components/ui/separator";
 import { useAuth } from "../context/AuthContext";
 import { getProfile, updateProfile } from "../../lib/database";
@@ -117,9 +117,8 @@ export function Settings() {
   const gcalConnected = !!providerToken;
 
   return (
+    <SidebarLayout>
     <div className="min-h-screen bg-neutral-50">
-      <AppNav backTo="/calendar" />
-
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Title */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -465,5 +464,6 @@ export function Settings() {
         </div>
       </div>
     </div>
+    </SidebarLayout>
   );
 }
