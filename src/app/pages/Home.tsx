@@ -5,6 +5,11 @@ import { Button } from "../components/ui/button";
 const CAMPANILE_IMAGE = "https://images.unsplash.com/photo-1583720464836-0f5ff417c4eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxVQyUyMEJlcmtlbGV5JTIwQ2FtcGFuaWxlJTIwdG93ZXJ8ZW58MXx8fHwxNzc1MzYyNDAwfDA&ixlib=rb-4.1.0&q=80&w=1080";
 const BEAR_IMAGE = "https://images.unsplash.com/photo-1742855966306-c35f1953cb8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDYWxpZm9ybmlhJTIwZ29sZGVuJTIwYmVhciUyMG1hc2NvdHxlbnwxfHx8fDE3NzUzNjI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080";
 
+function startDemo(navigate: ReturnType<typeof useNavigate>) {
+  sessionStorage.setItem('calbuddy_demo', 'true');
+  navigate('/landing');
+}
+
 export function Home() {
   const navigate = useNavigate();
 
@@ -66,7 +71,15 @@ export function Home() {
                 >
                   Get Started <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <div className="mt-6 text-sm text-[#717182]">
+                <div className="mt-4">
+                  <button
+                    onClick={() => startDemo(navigate)}
+                    className="text-sm text-[#003262] font-semibold hover:underline"
+                  >
+                    Try Demo (no login required) →
+                  </button>
+                </div>
+                <div className="mt-3 text-sm text-[#717182]">
                   Already have an account?{" "}
                   <button
                     onClick={() => navigate("/auth")}
@@ -104,11 +117,19 @@ export function Home() {
             </h1>
             <Button
               onClick={() => navigate("/auth")}
-              className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-full px-8 py-6 text-lg mb-4"
+              className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-full px-8 py-6 text-lg mb-2"
               style={{ fontFamily: 'var(--font-sans)' }}
             >
               Sync Canvas
             </Button>
+            <div className="mt-2">
+              <button
+                onClick={() => startDemo(navigate)}
+                className="text-sm text-[#003262] font-semibold hover:underline"
+              >
+                Try Demo (no login required) →
+              </button>
+            </div>
           </div>
 
           <div className="relative mb-8">

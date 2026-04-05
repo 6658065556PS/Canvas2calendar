@@ -7,6 +7,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileLoading } = useAuth()
   const location = useLocation()
 
+  // Demo mode: bypass auth entirely — pages handle null user via localStorage/mock data
+  const isDemo = sessionStorage.getItem('calbuddy_demo') === 'true'
+  if (isDemo) return <>{children}</>
+
   if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
