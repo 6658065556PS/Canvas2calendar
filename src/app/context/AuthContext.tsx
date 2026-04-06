@@ -23,8 +23,8 @@ interface AuthContextValue {
   profileLoading: boolean
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
   signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
-  signInWithGoogle: () => Promise<void>
-  connectGoogleCalendar: () => Promise<void>  // optional — requests calendar.events scope
+  signInWithGoogle: () => Promise<{ error: string | null }>
+  connectGoogleCalendar: () => Promise<{ error: string | null }>  // optional — requests calendar.events scope
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -39,8 +39,8 @@ const AuthContext = createContext<AuthContextValue>({
   profileLoading: true,
   signInWithEmail: async () => ({ error: null }),
   signUpWithEmail: async () => ({ error: null }),
-  signInWithGoogle: async () => {},
-  connectGoogleCalendar: async () => {},
+  signInWithGoogle: async () => ({ error: null }),
+  connectGoogleCalendar: async () => ({ error: null }),
   signOut: async () => {},
   refreshProfile: async () => {},
 })
@@ -107,23 +107,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message ?? null }
   }
 
-  const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
+  const signInWithGoogle = async (): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
+    return { error: error?.message ?? null }
   }
 
   // Separate opt-in flow that requests the calendar.events scope.
   // Only call this from Settings when the user explicitly wants to connect Google Calendar.
-  const connectGoogleCalendar = async () => {
-    await supabase.auth.signInWithOAuth({
+  const connectGoogleCalendar = async (): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
         scopes: 'https://www.googleapis.com/auth/calendar.events',
       },
     })
+    return { error: error?.message ?? null }
   }
 
   const signOut = async () => {

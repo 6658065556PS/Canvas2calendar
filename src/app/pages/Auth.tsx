@@ -143,7 +143,11 @@ export function Auth() {
               {/* Google — secondary, labeled as Calendar */}
               <button
                 type="button"
-                onClick={signInWithGoogle}
+                onClick={async () => {
+                  setError(null)
+                  const { error } = await signInWithGoogle()
+                  if (error) setError(error)
+                }}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2.5 border border-neutral-300 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
