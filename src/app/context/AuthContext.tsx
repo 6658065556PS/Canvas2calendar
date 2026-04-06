@@ -23,8 +23,7 @@ interface AuthContextValue {
   profileLoading: boolean
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
   signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
-  signInWithGoogle: () => Promise<{ error: string | null }>
-  connectGoogleCalendar: () => Promise<{ error: string | null }>  // optional — requests calendar.events scope
+  connectGoogleCalendar: () => Promise<{ error: string | null }>  // optional — requests calendar.events scope from Settings
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -39,7 +38,6 @@ const AuthContext = createContext<AuthContextValue>({
   profileLoading: true,
   signInWithEmail: async () => ({ error: null }),
   signUpWithEmail: async () => ({ error: null }),
-  signInWithGoogle: async () => ({ error: null }),
   connectGoogleCalendar: async () => ({ error: null }),
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -107,24 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message ?? null }
   }
 
-  const signInWithGoogle = async (): Promise<{ error: string | null }> => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        skipBrowserRedirect: true,
-      },
-    })
-    console.log('[Google OAuth]', { url: data?.url, error })
-    if (error) return { error: error.message }
-    if (data?.url) {
-      window.location.href = data.url
-      return { error: null }
-    }
-    return { error: 'Google sign-in could not be initiated — check Supabase Google provider config.' }
-  }
-
-  // Separate opt-in flow that requests the calendar.events scope.
+  // Opt-in Google Calendar connection — only called from Settings.
   // Only call this from Settings when the user explicitly wants to connect Google Calendar.
   const connectGoogleCalendar = async (): Promise<{ error: string | null }> => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -168,7 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileLoading,
       signInWithEmail,
       signUpWithEmail,
-      signInWithGoogle,
       connectGoogleCalendar,
       signOut,
       refreshProfile,
