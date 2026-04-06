@@ -108,11 +108,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async (): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: true,
+      },
     })
-    return { error: error?.message ?? null }
+    console.log('[Google OAuth]', { url: data?.url, error })
+    if (error) return { error: error.message }
+    if (data?.url) {
+      window.location.href = data.url
+      return { error: null }
+    }
+    return { error: 'Google sign-in could not be initiated — check Supabase Google provider config.' }
   }
 
   // Separate opt-in flow that requests the calendar.events scope.
