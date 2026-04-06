@@ -9,45 +9,26 @@ export function AuthCallback() {
 
   useEffect(() => {
     async function handle() {
-      // ── PKCE code exchange (email confirmation links, magic links) ──────────
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        if (error || !data.session) {
-          navigate('/auth', { replace: true })
-          return
-        }
-        await routeAfterSession(data.session.user.id)
-        return
-      }
+      // With flowType:'pkce' + detectSessionInUrl:true, the Supabase client
+      // automatically exchanges the PKCE code during initialization.
+      // getSession() awaits that initialization and returns the ready session —
+      // calling exchangeCodeForSession manually would fail ("code already used").
+      const { data: { session }, error } = await supabase.auth.getSession()
 
-      // ── Implicit hash flow (Google OAuth) ───────────────────────────────────
-      const hash = new URLSearchParams(window.location.hash.slice(1))
-      const access_token = hash.get('access_token')
-      const refresh_token = hash.get('refresh_token')
-
-      if (!access_token || !refresh_token) {
-        navigate('/auth', { replace: true })
-        return
-      }
-
-      const { data } = await supabase.auth.setSession({ access_token, refresh_token })
-      const userId = data.session?.user?.id
-      if (!userId) {
+      if (error || !session) {
         navigate('/auth', { replace: true })
         return
       }
 
       // Persist the Google provider_token so it survives page reloads.
-      if (data.session?.provider_token) {
-        await updateProfile(userId, {
-          google_access_token: data.session.provider_token,
+      if (session.provider_token) {
+        await updateProfile(session.user.id, {
+          google_access_token: session.provider_token,
           google_token_saved_at: new Date().toISOString(),
         })
       }
 
-      await routeAfterSession(userId)
+      await routeAfterSession(session.user.id)
     }
 
     async function routeAfterSession(userId: string) {

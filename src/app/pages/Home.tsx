@@ -41,43 +41,43 @@ export function Home() {
 
       {/* Hero Section — Desktop */}
       <section className="hidden md:block relative bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative h-[500px]">
-            <div className="absolute inset-0">
-              <img
-                src={CAMPANILE_IMAGE}
-                alt="UC Berkeley Campanile"
-                className="w-full h-full object-cover opacity-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" />
-            </div>
+        <div className="relative h-[600px] w-full">
+          <div className="absolute inset-0">
+            <img
+              src={CAMPANILE_IMAGE}
+              alt="UC Berkeley Campanile"
+              className="w-full h-full object-cover opacity-90"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent" />
+          </div>
 
-            {/* Content Overlay */}
-            <div className="relative h-full flex flex-col justify-end px-12 pb-12">
-              <div className="bg-white rounded-lg p-6 max-w-xl mb-8 shadow-lg">
+          {/* Content Overlay */}
+          <div className="relative h-full max-w-7xl mx-auto px-12">
+            <div className="h-full flex flex-col justify-center">
+              <div className="bg-white rounded-xl p-8 max-w-xl shadow-2xl">
                 <h1 className="text-5xl mb-4" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#001D3D', lineHeight: 1.1 }}>
                   Turn your SCET coursework into organized tasks — automatically.
                 </h1>
                 <p className="text-lg text-[#717182] mb-6" style={{ fontFamily: 'var(--font-sans)' }}>
                   Stop planning manually. Start executing your SCET classes with clarity and smart timing.
                 </p>
-                <Button
-                  onClick={() => navigate("/auth")}
-                  className="bg-[#FFB618] hover:bg-[#7D5700] text-[#001D3D] rounded-lg px-8 py-6 text-lg"
-                  style={{ fontFamily: 'var(--font-sans)' }}
-                >
-                  Get Started <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-                <div className="mt-4">
+                <div className="flex gap-3">
                   <Button
-                    onClick={() => startDemo(navigate)}
-                    className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-lg px-8 py-6 text-lg w-full"
+                    onClick={() => navigate("/auth")}
+                    className="bg-[#FFB618] hover:bg-[#7D5700] text-[#001D3D] rounded-lg px-8 py-6 text-lg"
                     style={{ fontFamily: 'var(--font-sans)' }}
                   >
-                    Try Demo (no login required) →
+                    Get Started <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => startDemo(navigate)}
+                    className="bg-[#003262] hover:bg-[#001D3D] text-white rounded-lg px-8 py-6 text-lg"
+                    style={{ fontFamily: 'var(--font-sans)' }}
+                  >
+                    Try Demo →
                   </Button>
                 </div>
-                <div className="mt-3 text-sm text-[#717182]">
+                <div className="mt-4 text-sm text-center text-[#717182]">
                   Already have an account?{" "}
                   <button
                     onClick={() => navigate("/auth")}
@@ -89,13 +89,14 @@ export function Home() {
               </div>
 
               {/* Trust Badge */}
-              <div className="flex items-center gap-8 text-sm text-[#717182]">
+              <div className="flex items-center gap-6 text-sm text-[#717182] mt-6">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
                   </svg>
                   <span>SECURE DATA</span>
                 </div>
+                <span>Free while in beta · No credit card required</span>
               </div>
             </div>
           </div>
