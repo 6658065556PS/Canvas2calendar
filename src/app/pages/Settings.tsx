@@ -156,7 +156,7 @@ export function Settings() {
                 </div>
                 <div className="text-sm text-neutral-500">{user?.email ?? "—"}</div>
                 <div className="text-xs text-neutral-400 mt-0.5">
-                  Signed in with Google
+                  Signed in with {user?.app_metadata?.provider === 'google' ? 'Google' : 'email'}
                 </div>
               </div>
             </div>
