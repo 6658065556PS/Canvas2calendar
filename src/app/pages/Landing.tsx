@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { AppNav } from "../components/AppNav";
+import { Logo } from "../components/Logo";
 
 interface Assignment {
   id: string;
@@ -90,8 +91,8 @@ export function Landing() {
       {/* Global Canvas Sidebar */}
       <aside className="w-[50px] bg-[#2C3E50] text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
         {/* Logo */}
-        <div className="w-8 h-8 bg-[#E87722] rounded-full flex items-center justify-center text-white font-bold text-sm mb-2">
-          C
+        <div className="w-10 h-10 flex items-center justify-center mb-2">
+          <Logo size={28} />
         </div>
 
         {/* Nav Icons */}

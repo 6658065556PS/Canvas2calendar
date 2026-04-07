@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Logo } from "../components/Logo";
 
 const CAMPANILE_IMAGE = "https://images.unsplash.com/photo-1583720464836-0f5ff417c4eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxVQyUyMEJlcmtlbGV5JTIwQ2FtcGFuaWxlJTIwdG93ZXJ8ZW58MXx8fHwxNzc1MzYyNDAwfDA&ixlib=rb-4.1.0&q=80&w=1080";
 const BEAR_IMAGE = "https://images.unsplash.com/photo-1742855966306-c35f1953cb8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDYWxpZm9ybmlhJTIwZ29sZGVuJTIwYmVhciUyMG1hc2NvdHxlbnwxfHx8fDE3NzUzNjI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080";
@@ -19,9 +20,9 @@ export function Home() {
       <header className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#003262] rounded-md flex items-center justify-center">
-              <span className="text-white text-lg font-bold">C</span>
-            </div>
+            <div className="w-8 h-8">
+            <Logo size={28} />
+          </div>
             <span className="text-lg" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, color: '#1A1C1C' }}>
               CalDaily
             </span>
