@@ -6,7 +6,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { Receiver } from '@upstash/qstash'
 import { createServerSupabaseClient } from '../src/lib/supabase-server.js'
 import { createCanvasClient } from '../src/lib/canvas/client.js'
-import { enrichAssignment } from '../src/lib/ai/groq.js'
+import { insertEnrichedAssignment } from '../src/lib/canvas/pipeline.js'
 import type { SyncJobPayload } from '../src/lib/qstash/client.js'
 
 // Disable Vercel's body parser so we can read the raw body for signature verification
@@ -85,73 +85,19 @@ async function handleSyncJob({ userId, courseIds }: SyncJobPayload) {
       .in('course', courseNames)
   }
 
-  // 5. Fetch assignments per course, enrich with AI, upsert to DB
+  // 5. Fetch assignments per course, enrich with AI, insert to DB
   for (const course of courses) {
     const assignments = await canvas.getAssignments(course.id)
-
     for (const assignment of assignments) {
-      // AI enrichment is best-effort — don't fail the whole sync if it errors
-      let enrichedTitle = assignment.name
-      let estimatedTime: string | null = null
-      try {
-        const enrichment = await enrichAssignment({
-          name: assignment.name,
-          description: assignment.description ?? '',
-          dueAt: assignment.due_at ?? '',
-          courseCode: course.course_code,
-        })
-        if (enrichment.summary) enrichedTitle = enrichment.summary
-        if (enrichment.estimatedMinutes) {
-          estimatedTime =
-            enrichment.estimatedMinutes >= 60
-              ? `${Math.round(enrichment.estimatedMinutes / 60)} hrs`
-              : `${enrichment.estimatedMinutes} min`
-        }
-      } catch (err) {
-        console.warn(`Enrichment failed for assignment ${assignment.id}:`, err)
-      }
-
-      const isUpcoming = assignment.due_at ? new Date(assignment.due_at) > new Date() : false
-
-      const { error } = await supabase.from('assignments').insert({
-        user_id: userId,
-        canvas_id: String(assignment.id),
-        title: enrichedTitle,
+      await insertEnrichedAssignment(supabase, userId, {
+        canvasId: String(assignment.id),
+        title: assignment.name,
         course: course.name,
-        due_date: assignment.due_at ?? null,
+        courseCode: course.course_code,
+        dueAt: assignment.due_at ?? null,
         description: assignment.description ?? null,
-        canvas_url: assignment.html_url,
-        is_upcoming: isUpcoming,
+        canvasUrl: assignment.html_url,
       })
-
-      if (error) {
-        console.warn(`Failed to insert assignment ${assignment.id}:`, error.message)
-      }
-
-      // If AI estimated time, create a task stub for this assignment
-      if (estimatedTime) {
-        const { data: inserted } = await supabase
-          .from('assignments')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('canvas_id', String(assignment.id))
-          .single()
-
-        if (inserted?.id) {
-          await supabase.from('tasks').insert({
-            user_id: userId,
-            assignment_id: inserted.id,
-            name: enrichedTitle,
-            category: 'assignment',
-            estimated_time: estimatedTime,
-            suggested_date: assignment.due_at ?? null,
-            difficulty: 'medium',
-            source_assignment: assignment.name,
-            completed: false,
-            position: 0,
-          })
-        }
-      }
     }
   }
 }
