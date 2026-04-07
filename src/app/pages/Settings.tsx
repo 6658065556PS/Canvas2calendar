@@ -212,7 +212,10 @@ export function Settings() {
                           : "Sign in again to grant Google Calendar permission."}
                       </div>
                       <Button
-                        onClick={connectGoogleCalendar}
+                        onClick={async () => {
+                          const { error } = await connectGoogleCalendar()
+                          if (error) setSaveMsg(`Google Calendar error: ${error}`)
+                        }}
                         size="sm"
                         className="bg-neutral-900 hover:bg-neutral-800 text-white"
                       >

@@ -169,9 +169,9 @@ export function Sync() {
             Continue to Dashboard <ChevronRight className="size-4" />
           </button>
           <button
-            onClick={() => {
+            onClick={async () => {
               sessionStorage.setItem("caldaily_next", "/decomposition");
-              connectGoogleCalendar();
+              await connectGoogleCalendar();
             }}
             className="w-full py-[14px] border border-neutral-300 text-neutral-700 rounded-2xl text-sm font-medium hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2"
           >

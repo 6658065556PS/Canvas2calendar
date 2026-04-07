@@ -108,14 +108,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Opt-in Google Calendar connection — only called from Settings.
   // Only call this from Settings when the user explicitly wants to connect Google Calendar.
   const connectGoogleCalendar = async (): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
         scopes: 'https://www.googleapis.com/auth/calendar.events',
+        skipBrowserRedirect: true,
       },
     })
-    return { error: error?.message ?? null }
+    if (error) return { error: error.message }
+    if (data?.url) {
+      window.location.href = data.url
+      return { error: null }
+    }
+    return { error: 'Could not initiate Google Calendar connection. Check Supabase Google provider config.' }
   }
 
   const signOut = async () => {
