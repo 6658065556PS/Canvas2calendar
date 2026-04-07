@@ -10,9 +10,8 @@ export function Logo({ size = 32, className, ...props }: LogoProps) {
     <img
       src={logoImg}
       alt="CalDaily logo"
-      width={size}
-      height={size}
       className={className}
+      style={{ width: size, height: "auto", display: "block" }}
       {...props}
     />
   );
