@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '../context/AuthContext'
+import { Logo } from '../components/Logo'
 
 export function Auth() {
   const { user, loading, signInWithEmail, signUpWithEmail } = useAuth()
@@ -48,12 +49,8 @@ export function Auth() {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-10 h-10 rounded-lg bg-[#003262] flex items-center justify-center mb-3">
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-[#FDB515]" stroke="currentColor" strokeWidth={2.2}>
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path d="M16 2v4M8 2v4M3 10h18" />
-              <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3">
+            <Logo size={40} />
           </div>
           <h1 className="text-xl font-semibold text-[#003262] tracking-tight">CalDaily</h1>
           <p className="text-xs text-neutral-500 mt-1">Your Berkeley academic co-pilot</p>

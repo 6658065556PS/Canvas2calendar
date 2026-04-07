@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { LayoutDashboard, ListChecks, CalendarDays, Settings, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Logo } from "./Logo";
 
 const BERKELEY_BLUE = "#003262";
 const CAL_GOLD = "#FDB515";
@@ -61,11 +62,14 @@ export function Sidebar() {
       >
         {/* Logo + collapse */}
         <div className="flex items-start justify-between px-5 py-6 border-b border-white/10">
-          <button onClick={() => navigate("/dashboard")} className="text-left">
-            <span className="text-white font-bold text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              CalDaily
-            </span>
-            <span className="block text-white/60 text-xs mt-0.5">UC Berkeley</span>
+          <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3 text-left">
+            <Logo size={32} />
+            <div>
+              <span className="text-white font-bold text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                CalDaily
+              </span>
+              <span className="block text-white/60 text-xs mt-0.5">UC Berkeley</span>
+            </div>
           </button>
           <button
             onClick={() => setExpanded(false)}

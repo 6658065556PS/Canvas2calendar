@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { Calendar } from "lucide-react";
 import { NavButtons } from "./NavButtons";
+import { Logo } from "./Logo";
 import { useAuth } from "../context/AuthContext";
 
 interface AppNavProps {
@@ -45,8 +45,8 @@ export function AppNav({ backTo, rightContent }: AppNavProps) {
             className="flex items-center gap-2 ml-1 mr-3"
             aria-label="Home"
           >
-            <div className="size-8 bg-neutral-900 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Calendar className="size-5 text-white" />
+            <div className="size-8 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Logo size={28} />
             </div>
             <span className="text-base font-semibold text-neutral-900 hidden sm:block whitespace-nowrap">
               CalDaily
