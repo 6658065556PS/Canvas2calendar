@@ -45,8 +45,8 @@ export function AppNav({ backTo, rightContent }: AppNavProps) {
             className="flex items-center gap-2 ml-1 mr-3"
             aria-label="Home"
           >
-            <div className="size-10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Logo size={40} />
+            <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Logo size={56} />
             </div>
             <span className="text-base font-semibold text-neutral-900 hidden sm:block whitespace-nowrap">
               CalDaily

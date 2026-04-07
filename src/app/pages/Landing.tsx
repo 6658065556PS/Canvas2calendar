@@ -91,8 +91,8 @@ export function Landing() {
       {/* Global Canvas Sidebar */}
       <aside className="w-[50px] bg-[#2C3E50] text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
         {/* Logo */}
-        <div className="w-12 h-12 flex items-center justify-center mb-2">
-          <Logo size={40} />
+        <div className="w-14 h-14 flex items-center justify-center mb-2">
+          <Logo size={56} />
         </div>
 
         {/* Nav Icons */}

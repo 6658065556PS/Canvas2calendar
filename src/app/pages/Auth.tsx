@@ -49,8 +49,8 @@ export function Auth() {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3">
-            <Logo size={40} />
+          <div className="w-14 h-14 rounded-lg flex items-center justify-center mb-3">
+            <Logo size={56} />
           </div>
           <h1 className="text-xl font-semibold text-[#003262] tracking-tight">CalDaily</h1>
           <p className="text-xs text-neutral-500 mt-1">Your Berkeley academic co-pilot</p>
