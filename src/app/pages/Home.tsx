@@ -19,9 +19,9 @@ export function Home() {
       {/* Header */}
       <header className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-14 h-14">
-              <Logo size={56} />
+          <div className="flex items-center gap-4">
+            <div className="h-[84px] flex items-center">
+              <Logo size={84} />
             </div>
             <span className="text-lg" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, color: '#1A1C1C' }}>
               CalDaily

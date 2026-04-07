@@ -63,7 +63,7 @@ export function Sidebar() {
         {/* Logo + collapse */}
         <div className="flex items-start justify-between px-5 py-6 border-b border-white/10">
           <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3 text-left">
-            <Logo size={56} />
+            <Logo size={84} />
             <div>
               <span className="text-white font-bold text-xl" style={{ fontFamily: "var(--font-serif)" }}>
                 CalDaily

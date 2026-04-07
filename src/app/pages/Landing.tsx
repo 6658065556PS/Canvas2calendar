@@ -89,10 +89,10 @@ export function Landing() {
       <AppNav backTo="/" />
       <div className="flex flex-1">
       {/* Global Canvas Sidebar */}
-      <aside className="w-[50px] bg-[#2C3E50] text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
+      <aside className="w-[68px] bg-[#2C3E50] text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
         {/* Logo */}
-        <div className="w-14 h-14 flex items-center justify-center mb-2">
-          <Logo size={56} />
+        <div className="h-[84px] flex items-center justify-center mb-2">
+          <Logo size={84} />
         </div>
 
         {/* Nav Icons */}
