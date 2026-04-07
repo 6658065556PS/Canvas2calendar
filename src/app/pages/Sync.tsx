@@ -48,7 +48,7 @@ export function Sync() {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => { document.title = "Connect Canvas — CalBuddy"; }, []);
+  useEffect(() => { document.title = "Connect Canvas — CalDaily"; }, []);
 
   async function handleIcalConnect() {
     if (!feedUrl.trim()) return;
@@ -176,7 +176,7 @@ export function Sync() {
           </button>
           <button
             onClick={() => {
-              sessionStorage.setItem("calbuddy_next", "/decomposition");
+              sessionStorage.setItem("caldaily_next", "/decomposition");
               connectGoogleCalendar();
             }}
             className="w-full py-[14px] border border-neutral-300 text-neutral-700 rounded-2xl text-sm font-medium hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2"

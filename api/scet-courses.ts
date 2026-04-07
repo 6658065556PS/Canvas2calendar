@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 async function fetchAndParse(): Promise<ScetCatalog> {
   const response = await fetch('https://scet.berkeley.edu/students/courses/', {
-    headers: { 'User-Agent': 'CalBuddy/1.0 (UC Berkeley SCET student app)' },
+    headers: { 'User-Agent': 'CalDaily/1.0 (UC Berkeley SCET student app)' },
     signal: AbortSignal.timeout(8000),
   })
   if (!response.ok) throw new Error(`HTTP ${response.status}`)

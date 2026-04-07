@@ -8,7 +8,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const location = useLocation()
 
   // Demo mode: bypass auth entirely — pages handle null user via localStorage/mock data
-  const isDemo = sessionStorage.getItem('calbuddy_demo') === 'true'
+  const isDemo = sessionStorage.getItem('caldaily_demo') === 'true'
   if (isDemo) return <>{children}</>
 
   if (loading || profileLoading) {

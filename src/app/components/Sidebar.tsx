@@ -43,7 +43,7 @@ export function Sidebar() {
             className="text-left"
           >
             <span className="text-white font-bold text-[17px]" style={{ fontFamily: "var(--font-serif)" }}>
-              CalBuddy
+              CalDaily
             </span>
             <span className="block text-white/60 text-xs">UC Berkeley</span>
           </button>
@@ -63,7 +63,7 @@ export function Sidebar() {
         <div className="flex items-start justify-between px-5 py-6 border-b border-white/10">
           <button onClick={() => navigate("/dashboard")} className="text-left">
             <span className="text-white font-bold text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              CalBuddy
+              CalDaily
             </span>
             <span className="block text-white/60 text-xs mt-0.5">UC Berkeley</span>
           </button>
@@ -122,7 +122,7 @@ export function Sidebar() {
               <p className="text-white/40 text-xs truncate">{user?.email ?? ""}</p>
             </div>
           </button>
-          <p className="text-white/30 text-xs mt-4">© 2026 CalBuddy</p>
+          <p className="text-white/30 text-xs mt-4">© 2026 CalDaily</p>
           <p className="text-white/30 text-xs">Built for Cal students</p>
         </div>
       </aside>

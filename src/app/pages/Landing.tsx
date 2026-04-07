@@ -69,7 +69,7 @@ export function Landing() {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDecomposeModal, setShowDecomposeModal] = useState(false);
 
-  useEffect(() => { document.title = "CalBuddy — Focus your coursework"; }, []);
+  useEffect(() => { document.title = "CalDaily — Focus your coursework"; }, []);
 
   const handleAssignmentClick = (assignment: Assignment) => {
     // Only "Stay Current 7 - 8" is clickable
@@ -336,7 +336,7 @@ export function Landing() {
                       <Sparkles className="size-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">Canvas2Calendar</h2>
+                      <h2 className="text-xl font-semibold">CalDaily</h2>
                       <p className="text-sm text-blue-100">AI-Powered Task Breakdown</p>
                     </div>
                   </div>

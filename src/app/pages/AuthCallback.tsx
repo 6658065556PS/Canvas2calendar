@@ -34,9 +34,9 @@ export function AuthCallback() {
     async function routeAfterSession(userId: string) {
       // If we were mid-flow (e.g. connecting Google Calendar during setup),
       // honour the stored destination instead of the default routing.
-      const pendingNext = sessionStorage.getItem('calbuddy_next')
+      const pendingNext = sessionStorage.getItem('caldaily_next')
       if (pendingNext) {
-        sessionStorage.removeItem('calbuddy_next')
+        sessionStorage.removeItem('caldaily_next')
         navigate(pendingNext, { replace: true })
         return
       }

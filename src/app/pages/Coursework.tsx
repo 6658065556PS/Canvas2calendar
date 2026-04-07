@@ -137,7 +137,7 @@ export function Coursework() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { document.title = "Courses — CalBuddy"; }, []);
+  useEffect(() => { document.title = "Courses — CalDaily"; }, []);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }

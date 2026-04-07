@@ -16,7 +16,7 @@ export function Auth() {
   const [error, setError] = useState<string | null>(null)
   const [signupDone, setSignupDone] = useState(false)
 
-  useEffect(() => { document.title = 'Sign in — CalBuddy' }, [])
+  useEffect(() => { document.title = 'Sign in — CalDaily' }, [])
 
   useEffect(() => {
     if (!loading && user) navigate(from, { replace: true })
@@ -55,7 +55,7 @@ export function Auth() {
               <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-[#003262] tracking-tight">CalBuddy</h1>
+          <h1 className="text-xl font-semibold text-[#003262] tracking-tight">CalDaily</h1>
           <p className="text-xs text-neutral-500 mt-1">Your Berkeley academic co-pilot</p>
         </div>
 

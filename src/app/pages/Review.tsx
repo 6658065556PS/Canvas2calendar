@@ -111,7 +111,7 @@ export function Review() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState(mockTasks);
 
-  useEffect(() => { document.title = "Review Tasks — CalBuddy"; }, []);
+  useEffect(() => { document.title = "Review Tasks — CalDaily"; }, []);
   const [editingTask, setEditingTask] = useState<{ taskId: string; field: 'name' | 'time' } | null>(null);
 
   const toggleTask = (id: string) => {

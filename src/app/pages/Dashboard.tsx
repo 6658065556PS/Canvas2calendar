@@ -80,7 +80,7 @@ export function Dashboard() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { document.title = "Dashboard — CalBuddy"; }, []);
+  useEffect(() => { document.title = "Dashboard — CalDaily"; }, []);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -126,7 +126,7 @@ export function Dashboard() {
           )}
         </button>
 
-        <h1 className="text-lg font-bold text-white tracking-wide">CalBuddy Dashboard</h1>
+        <h1 className="text-lg font-bold text-white tracking-wide">CalDaily Dashboard</h1>
 
         <div
           className="size-9 rounded-full flex items-center justify-center font-black text-[11px]"

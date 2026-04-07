@@ -49,7 +49,7 @@ export function AppNav({ backTo, rightContent }: AppNavProps) {
               <Calendar className="size-5 text-white" />
             </div>
             <span className="text-base font-semibold text-neutral-900 hidden sm:block whitespace-nowrap">
-              Canvas2Calendar
+              CalDaily
             </span>
           </button>
 

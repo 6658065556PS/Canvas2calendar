@@ -35,7 +35,7 @@ export function Onboarding() {
   const [catalogError, setCatalogError] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { document.title = 'Welcome — CalBuddy' }, [])
+  useEffect(() => { document.title = 'Welcome — CalDaily' }, [])
 
   // Fetch SCET catalog when we reach step 3
   useEffect(() => {
@@ -111,7 +111,7 @@ export function Onboarding() {
               <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <p className="text-xs text-neutral-500">Let's set up your CalBuddy</p>
+          <p className="text-xs text-neutral-500">Let's set up your CalDaily</p>
         </div>
 
         {/* Step indicator */}

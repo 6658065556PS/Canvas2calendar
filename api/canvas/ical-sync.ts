@@ -106,7 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let icsText: string
   try {
     const icsRes = await fetch(feedUrl, {
-      headers: { 'User-Agent': 'CalBuddy/1.0 (+https://canvas2calendar.vercel.app)' },
+      headers: { 'User-Agent': 'CalDaily/1.0 (+https://canvas2calendar.vercel.app)' },
     })
     if (!icsRes.ok) throw new Error(`HTTP ${icsRes.status}`)
     icsText = await icsRes.text()

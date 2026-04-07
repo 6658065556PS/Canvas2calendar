@@ -17,7 +17,7 @@ export interface ScetCatalog {
   fetchedAt: string        // ISO timestamp
 }
 
-const CACHE_KEY = 'calbuddy_scet_catalog'
+const CACHE_KEY = 'caldaily_scet_catalog'
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000  // 1 week — course list doesn't change mid-semester
 
 export async function fetchScetCatalog(): Promise<ScetCatalog> {

@@ -407,7 +407,7 @@ function WorkspaceContent() {
     return initialSchedule;
   });
 
-  useEffect(() => { document.title = "Workspace — CalBuddy"; }, []);
+  useEffect(() => { document.title = "Workspace — CalDaily"; }, []);
 
   // Load tasks from Decomposition state, Supabase (if auth'd), or localStorage
   useEffect(() => {

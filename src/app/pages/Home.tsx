@@ -6,7 +6,7 @@ const CAMPANILE_IMAGE = "https://images.unsplash.com/photo-1583720464836-0f5ff41
 const BEAR_IMAGE = "https://images.unsplash.com/photo-1742855966306-c35f1953cb8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDYWxpZm9ybmlhJTIwZ29sZGVuJTIwYmVhciUyMG1hc2NvdHxlbnwxfHx8fDE3NzUzNjI0MDB8MA&ixlib=rb-4.1.0&q=80&w=1080";
 
 function startDemo(navigate: ReturnType<typeof useNavigate>) {
-  sessionStorage.setItem('calbuddy_demo', 'true');
+  sessionStorage.setItem('caldaily_demo', 'true');
   navigate('/landing');
 }
 
@@ -23,7 +23,7 @@ export function Home() {
               <span className="text-white text-lg font-bold">C</span>
             </div>
             <span className="text-lg" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, color: '#1A1C1C' }}>
-              CalBuddy
+              CalDaily
             </span>
           </div>
           <div className="flex items-center gap-3">

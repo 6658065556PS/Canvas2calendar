@@ -43,7 +43,7 @@ export function Settings() {
   const [workload, setWorkload] = useState<'balanced' | 'front-loaded' | 'back-loaded'>("balanced");
   const [weekStart, setWeekStartDay] = useState<'sunday' | 'monday'>("sunday");
 
-  useEffect(() => { document.title = "Settings — CalBuddy"; }, []);
+  useEffect(() => { document.title = "Settings — CalDaily"; }, []);
 
   useEffect(() => {
     if (!user) return;
