@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { CheckCircle, AlertCircle, CalendarCheck, ChevronRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { updateProfile } from "../../lib/database";
 
 type SyncMethod = "ical" | "apikey";
 type SyncStatus = "idle" | "syncing" | "done" | "gcal" | "error";
@@ -84,19 +83,14 @@ export function Sync() {
     setErrorMessage(null);
 
     try {
-      // Save token to profile first
-      const { error: saveErr } = await updateProfile(user.id, { canvas_api_token: apiKey.trim() });
-      if (saveErr) throw new Error("Failed to save API token");
-
-      // Trigger QStash sync
-      const res = await fetch("/api/canvas/sync", {
+      const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        body: JSON.stringify({ userId: user.id, canvasToken: apiKey.trim() }),
       });
 
       if (res.status === 404) {
-        throw new Error("Sync API not reachable. Use `vercel dev` instead of `npm run dev` to test this locally.");
+        throw new Error("Sync API not reachable. Make sure the app is deployed to Vercel.");
       }
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { error?: string };
