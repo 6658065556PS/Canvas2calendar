@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { LayoutDashboard, ListChecks, CalendarDays, Settings, GraduationCap, Menu, X } from "lucide-react";
+import { LayoutDashboard, ListChecks, CalendarDays, Settings, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const BERKELEY_BLUE = "#003262";
