@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { LayoutDashboard, ListChecks, CalendarDays, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, ListChecks, CalendarDays, Settings, Menu, X, Coffee } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "./Logo";
 
@@ -126,7 +126,19 @@ export function Sidebar() {
               <p className="text-white/40 text-xs truncate">{user?.email ?? ""}</p>
             </div>
           </button>
-          <p className="text-white/30 text-xs mt-4">© 2026 CalDaily</p>
+          <a
+            href="https://buymeacoffee.com/caldaily?new=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium transition-all"
+            style={{ backgroundColor: "rgba(253,181,21,0.12)", color: CAL_GOLD }}
+            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(253,181,21,0.22)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(253,181,21,0.12)"; }}
+          >
+            <Coffee className="size-3.5 shrink-0" />
+            Buy the Dev Team a Coffee
+          </a>
+          <p className="text-white/30 text-xs mt-3">© 2026 CalDaily</p>
           <p className="text-white/30 text-xs">Built for Cal students</p>
         </div>
       </aside>
