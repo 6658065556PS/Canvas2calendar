@@ -60,7 +60,7 @@ export function Home() {
                   Turn your SCET coursework into organized tasks — automatically.
                 </h1>
                 <p className="text-lg text-[#717182] mb-6" style={{ fontFamily: 'var(--font-sans)' }}>
-                  Stop planning manually. Start executing your SCET classes with clarity and smart timing.
+                  Stop planning manually. Automate all your tasks
                 </p>
                 <div className="flex gap-3">
                   <Button
