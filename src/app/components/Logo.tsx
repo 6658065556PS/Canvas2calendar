@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef } from "react";
-import logoImg from "../../assets/logo-updated.png";
+import logoImg from "../../assets/logo.png";
 
 interface LogoProps extends ComponentPropsWithoutRef<"img"> {
   size?: number;
