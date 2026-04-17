@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { CheckSquare, CalendarDays, RefreshCw, Flame, Calendar as CalIcon } from "lucide-react";
+import { CheckSquare, CalendarDays, RefreshCw, Calendar as CalIcon, Award, ArrowRight } from "lucide-react";
 import { SidebarLayout } from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { getTasks, toggleTaskCompletion, getAssignments } from "../../lib/database";
@@ -16,23 +16,6 @@ function daysUntilFinals(): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.max(0, Math.ceil((FINALS_DATE.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-}
-
-function computeStreak(tasks: Task[]): number {
-  const completedDates = new Set(
-    tasks.filter(t => t.completed && t.updated_at).map(t => t.updated_at.split("T")[0])
-  );
-  if (completedDates.size === 0) return 0;
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    if (completedDates.has(d.toISOString().split("T")[0])) { streak++; }
-    else if (i > 0) { break; }
-  }
-  return streak;
 }
 
 interface CourseRow {
@@ -51,6 +34,9 @@ function parseCourse(course: string): { code: string; title: string } {
   return { code: "", title: course };
 }
 
+// PM and Resilience course codes — pin them first
+const PINNED_CODES = ["ENGIN 183D", "ENGIN 183"];
+
 function buildCourseRows(assignments: Assignment[], tasks: Task[]): CourseRow[] {
   const courseMap = new Map<string, Assignment[]>();
   for (const a of assignments) {
@@ -59,19 +45,28 @@ function buildCourseRows(assignments: Assignment[], tasks: Task[]): CourseRow[] 
     courseMap.get(c)!.push(a);
   }
 
-  return Array.from(courseMap.entries()).map(([name, asgns]) => {
+  const rows = Array.from(courseMap.entries()).map(([name, asgns]) => {
     const titles = new Set(asgns.map(a => a.title));
     const courseTasks = tasks.filter(t => t.source_assignment && titles.has(t.source_assignment));
     const { code, title } = parseCourse(name);
-    return {
-      name,
-      code,
-      title,
-      totalTasks: courseTasks.length,
-      completedTasks: courseTasks.filter(t => t.completed).length,
-    };
+    return { name, code, title, totalTasks: courseTasks.length, completedTasks: courseTasks.filter(t => t.completed).length };
   });
+
+  // Pinned courses first
+  return [
+    ...rows.filter(r => PINNED_CODES.includes(r.code)),
+    ...rows.filter(r => !PINNED_CODES.includes(r.code)),
+  ];
 }
+
+const CERT_REQUIREMENTS = [
+  { label: "Newton Series", code: "ENGIN 183A", units: 1, done: false },
+  { label: "BMoE Bootcamp", code: "ENGIN 183B", units: 2, done: false },
+  { label: "Challenge Lab", code: "ENGIN 183C", units: 4, done: false },
+  { label: "Special Topic I — Product Management", code: "ENGIN 183D", units: 3, done: false },
+  { label: "Special Topic II — Applied Resilience", code: "ENGIN 183", units: 3, done: false },
+];
+const CERT_UNITS_TOTAL = CERT_REQUIREMENTS.reduce((s, r) => s + r.units, 0);
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -94,10 +89,23 @@ export function Dashboard() {
   const focusTasks = tasks.filter(t => !t.completed).slice(0, 3);
   const totalTasks = tasks.length;
   const completedCount = tasks.filter(t => t.completed).length;
-  const completionPct = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+  const focusPct = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
   const courseRows = buildCourseRows(assignments, tasks);
 
-  const streak = computeStreak(tasks);
+  // Semester-wide totals
+  const semesterTotal = courseRows.reduce((s, c) => s + c.totalTasks, 0);
+  const semesterCompleted = courseRows.reduce((s, c) => s + c.completedTasks, 0);
+  const semesterPct = semesterTotal > 0 ? Math.round((semesterCompleted / semesterTotal) * 100) : 0;
+
+  // Certificate — mark a requirement done if the user has a matching synced course with all tasks complete
+  const certReqs = CERT_REQUIREMENTS.map(req => {
+    const row = courseRows.find(r => r.code === req.code);
+    const done = row ? row.totalTasks > 0 && row.completedTasks === row.totalTasks : false;
+    return { ...req, done };
+  });
+  const certUnitsEarned = certReqs.filter(r => r.done).reduce((s, r) => s + r.units, 0);
+  const certPct = Math.round((certUnitsEarned / CERT_UNITS_TOTAL) * 100);
+
   const days = daysUntilFinals();
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
@@ -141,12 +149,10 @@ export function Dashboard() {
         {/* ── Today's Focus ───────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-            {/* Card header bar */}
             <div className="px-5 py-3 text-center" style={{ backgroundColor: BERKELEY_BLUE }}>
               <h2 className="text-sm font-bold text-white tracking-[0.15em]">TODAY'S FOCUS</h2>
             </div>
 
-            {/* Task list */}
             <div className="px-5 py-4 space-y-3">
               {loading ? (
                 <p className="py-4 text-center text-neutral-400 text-sm">Loading…</p>
@@ -197,18 +203,17 @@ export function Dashboard() {
               )}
             </div>
 
-            {/* Daily goal progress */}
             {totalTasks > 0 && (
               <div className="px-5 pb-5">
                 <p className="text-[11px] font-bold text-neutral-700 mb-1.5 tracking-wider">
-                  DAILY GOAL: {completionPct}% COMPLETE
+                  DAILY GOAL: {focusPct}% COMPLETE
                 </p>
                 <div className="h-3 bg-neutral-200 rounded-full overflow-hidden">
                   <motion.div
                     className="h-full rounded-full"
                     style={{ backgroundColor: CAL_GOLD }}
                     initial={{ width: 0 }}
-                    animate={{ width: `${completionPct}%` }}
+                    animate={{ width: `${focusPct}%` }}
                     transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
                   />
                 </div>
@@ -217,25 +222,34 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* ── Streak + Finals ─────────────────────────────────────── */}
+        {/* ── Semester Completion + Finals ────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <div className="bg-white rounded-2xl shadow-sm px-5 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[15px]"
-                style={{ backgroundColor: CAL_GOLD, color: BERKELEY_BLUE }}
-              >
-                <Flame className="size-4" />
-                {streak} Day Streak
+          <div className="bg-white rounded-2xl shadow-sm px-5 py-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold tracking-wider text-neutral-500">SEMESTER PROGRESS</p>
+                <p className="text-2xl font-black mt-0.5" style={{ color: BERKELEY_BLUE }}>
+                  {loading ? "—" : `${semesterPct}%`}
+                  <span className="text-sm font-semibold text-neutral-400 ml-2">
+                    {loading ? "" : `${semesterCompleted}/${semesterTotal} tasks`}
+                  </span>
+                </p>
               </div>
-              <p className="text-[11px] font-medium text-neutral-500 leading-tight max-w-[70px]">
-                Study<br />Streak
-              </p>
+              <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: BERKELEY_BLUE }}>
+                <CalIcon className="size-5" style={{ color: CAL_GOLD }} />
+                <span>{days}d until finals</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-base font-semibold" style={{ color: BERKELEY_BLUE }}>
-              <CalIcon className="size-5" style={{ color: CAL_GOLD }} />
-              {days} Days Until Finals
+            <div className="h-3 bg-neutral-200 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: CAL_GOLD }}
+                initial={{ width: 0 }}
+                animate={{ width: `${semesterPct}%` }}
+                transition={{ duration: 0.9, ease: "easeOut", delay: 0.25 }}
+              />
             </div>
+            <p className="text-xs text-neutral-400">Cumulative across all SCET courses this semester</p>
           </div>
         </motion.div>
 
@@ -259,16 +273,26 @@ export function Dashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {courseRows.map((course) => {
+                {courseRows.map((course, idx) => {
                   const pct = course.totalTasks > 0
                     ? Math.round((course.completedTasks / course.totalTasks) * 100)
                     : 0;
+                  const isPinned = PINNED_CODES.includes(course.code);
+                  const pinLabel = course.code === "ENGIN 183D" ? "PM" : course.code === "ENGIN 183" ? "RESILIENCE" : null;
                   return (
                     <div
                       key={course.name}
                       className="rounded-xl px-4 py-4 flex flex-col gap-2"
                       style={{ backgroundColor: "#F0F2F5" }}
                     >
+                      {isPinned && pinLabel && (
+                        <span
+                          className="self-start text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5"
+                          style={{ backgroundColor: CAL_GOLD, color: BERKELEY_BLUE }}
+                        >
+                          {pinLabel}
+                        </span>
+                      )}
                       <h3 className="text-sm font-bold leading-snug min-h-[2.5rem]" style={{ color: "#1A1C1C" }}>
                         {course.code ? `${course.code}: ${course.title}` : course.title}
                       </h3>
@@ -278,7 +302,7 @@ export function Dashboard() {
                           style={{ backgroundColor: CAL_GOLD }}
                           initial={{ width: 0 }}
                           animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 + idx * 0.05 }}
                         />
                       </div>
                       <p className="text-xs text-neutral-500">{pct}% complete · {course.completedTasks}/{course.totalTasks} tasks</p>
@@ -297,8 +321,78 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* ── Calendar quick link ──────────────────────────────────── */}
+        {/* ── SCET Certificate Tracker ─────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div
+                className="size-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: BERKELEY_BLUE }}
+              >
+                <Award className="size-4" style={{ color: CAL_GOLD }} />
+              </div>
+              <div>
+                <h2 className="text-base font-bold leading-tight" style={{ color: BERKELEY_BLUE }}>
+                  SCET Certificate
+                </h2>
+                <p className="text-[11px] text-neutral-400">Certificate in Entrepreneurship &amp; Technology</p>
+              </div>
+              <span className="ml-auto text-lg font-black" style={{ color: BERKELEY_BLUE }}>
+                {loading ? "—" : `${certPct}%`}
+              </span>
+            </div>
+
+            <div className="h-3 bg-neutral-200 rounded-full overflow-hidden mb-1.5">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: BERKELEY_BLUE }}
+                initial={{ width: 0 }}
+                animate={{ width: `${certPct}%` }}
+                transition={{ duration: 0.9, ease: "easeOut", delay: 0.4 }}
+              />
+            </div>
+            <p className="text-xs text-neutral-400 mb-4">
+              {certUnitsEarned} of {CERT_UNITS_TOTAL} units complete
+            </p>
+
+            <div className="space-y-2">
+              {certReqs.map((req) => (
+                <div key={req.code} className="flex items-center gap-3">
+                  <div
+                    className="shrink-0 size-5 rounded-full border-2 flex items-center justify-center"
+                    style={{
+                      borderColor: req.done ? BERKELEY_BLUE : "#D1D5DB",
+                      backgroundColor: req.done ? BERKELEY_BLUE : "transparent",
+                    }}
+                  >
+                    {req.done && (
+                      <svg className="size-3 text-white" fill="none" viewBox="0 0 12 12">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium leading-tight ${req.done ? "text-neutral-400 line-through" : "text-neutral-800"}`}>
+                      {req.label}
+                    </p>
+                    <p className="text-[11px] text-neutral-400">{req.code} · {req.units} {req.units === 1 ? "unit" : "units"}</p>
+                  </div>
+                  {!req.done && (
+                    <span
+                      className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                      style={{ backgroundColor: "#F0F2F5", color: BERKELEY_BLUE }}
+                    >
+                      IN PROGRESS
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Calendar quick link ──────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
           <button
             onClick={() => navigate("/calendar")}
             className="w-full bg-white rounded-2xl p-4 shadow-sm text-left hover:shadow-md transition-shadow flex items-center gap-4"
@@ -309,10 +403,11 @@ export function Dashboard() {
             >
               <CalendarDays className="size-5" style={{ color: CAL_GOLD }} />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="font-semibold text-sm" style={{ color: BERKELEY_BLUE }}>Calendar</p>
               <p className="text-xs text-neutral-400 mt-0.5">Schedule your tasks and manage deadlines</p>
             </div>
+            <ArrowRight className="size-5 text-neutral-300 shrink-0" />
           </button>
         </motion.div>
       </div>

@@ -8,7 +8,7 @@ const BEAR_IMAGE = "https://images.unsplash.com/photo-1742855966306-c35f1953cb8d
 
 function startDemo(navigate: ReturnType<typeof useNavigate>) {
   sessionStorage.setItem('caldaily_demo', 'true');
-  navigate('/demo');
+  navigate('/landing');
 }
 
 export function Home() {

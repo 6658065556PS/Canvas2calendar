@@ -11,7 +11,6 @@ import { AuthCallback } from "./pages/AuthCallback";
 import { Workspace } from "./pages/Workspace";
 import { ComingSoon } from "./pages/ComingSoon";
 import { Dashboard } from "./pages/Dashboard";
-import { DemoDashboard } from "./pages/DemoDashboard";
 import { Coursework } from "./pages/Coursework";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -22,7 +21,6 @@ export const router = createBrowserRouter([
   { path: "/auth",          Component: Auth },
   { path: "/auth/callback", Component: AuthCallback },
   { path: "/coming-soon",   Component: ComingSoon },
-  { path: "/demo",          Component: DemoDashboard },
 
   // ── Protected routes (require sign-in + completed onboarding) ──────────
   {
