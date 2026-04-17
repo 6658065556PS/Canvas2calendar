@@ -47,7 +47,8 @@ class CanvasClient {
   // Follows Link: rel="next" pagination headers to fetch all pages
   private async getAll<T>(path: string, perPage = 50): Promise<T[]> {
     const results: T[] = []
-    let url: string | null = `${this.config.baseUrl}/api/v1${path}?per_page=${perPage}`
+    const sep = path.includes('?') ? '&' : '?'
+    let url: string | null = `${this.config.baseUrl}/api/v1${path}${sep}per_page=${perPage}`
 
     while (url) {
       const res = await fetch(url, {

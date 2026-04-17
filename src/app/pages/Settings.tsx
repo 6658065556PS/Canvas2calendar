@@ -94,23 +94,24 @@ export function Settings() {
   };
 
   const handleSyncNow = async () => {
-    if (!user || !profile?.canvas_api_token) return;
+    const savedToken = profile?.canvas_api_token;
+    if (!user || !savedToken) return;
     setSyncing(true);
     setTokenMsg(null);
     try {
-      const res = await fetch("/api/canvas/sync", {
+      const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        body: JSON.stringify({ userId: user.id, canvasToken: savedToken }),
       });
-      const data = await res.json().catch(() => ({})) as { error?: string };
+      const data = await res.json().catch(() => ({})) as { error?: string; synced?: number };
       if (!res.ok) throw new Error(data.error ?? `Sync failed (${res.status})`);
-      setTokenMsg("Sync started — assignments will appear shortly.");
+      setTokenMsg(`Sync complete — ${data.synced ?? 0} assignments updated.`);
     } catch (err) {
       setTokenMsg(err instanceof Error ? `Error: ${err.message}` : "Sync failed.");
     } finally {
       setSyncing(false);
-      setTimeout(() => setTokenMsg(null), 4000);
+      setTimeout(() => setTokenMsg(null), 5000);
     }
   };
 
