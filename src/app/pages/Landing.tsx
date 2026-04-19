@@ -19,49 +19,47 @@ interface Assignment {
   points?: string;
 }
 
-const upcomingAssignments: Assignment[] = [
-  {
-    id: "upcoming-1",
-    title: "Stay Current 7 - 8",
-    dueDate: "Due Mar 8 at 11:59pm",
-  },
-];
+interface Course {
+  id: string;
+  name: string;
+  code: string;
+  upcoming: Assignment[];
+  past: Assignment[];
+}
 
-const pastAssignments: Assignment[] = [
+const courses: Course[] = [
   {
-    id: "2",
-    title: "Stay Current 6-7",
-    dueDate: "Due Mar 1 at 11:59pm",
+    id: "challenge-lab",
+    name: "Challenge Lab",
+    code: "ENGIN 183C-003",
+    upcoming: [
+      { id: "cl-1", title: "Product Launch Story", dueDate: "Due Apr 19 at 11:59pm | -/5 pts" },
+      { id: "cl-2", title: "Extra Credit: SCET Nomination", dueDate: "Due Apr 25 at 11:59pm" },
+      { id: "cl-3", title: "Final Pitch Presentation + Tech Review", dueDate: "Due Apr 28 at 11:59pm | -/30 pts" },
+    ],
+    past: [
+      { id: "cl-4", title: "Value Proposition for each Persona Individual Submission", dueDate: "Closed | Due Apr 13 at 12:00pm | 1/2 pts" },
+      { id: "cl-5", title: "Value Proposition for each Persona Group Submission", dueDate: "Due Apr 12 at 11:59pm | 2/2 pts" },
+      { id: "cl-6", title: "Reflection on IIRs", dueDate: "Due Apr 3 at 11:59pm | 2/1 pts" },
+      { id: "cl-7", title: "Midterm Presentation - Final Customer Research Plan", dueDate: "Closed | Due Mar 18 at 11:30am | 28.5/30 pts" },
+      { id: "cl-8", title: "Business Model Canvas", dueDate: "Due Mar 15 at 11:59pm | 2/2 pts" },
+      { id: "cl-9", title: "Customer Research Plan and Persona", dueDate: "Closed | Due Mar 8 at 11:59pm | 2/2 pts" },
+    ],
   },
   {
-    id: "3",
-    title: "Stay Current 5-6",
-    dueDate: "Due Feb 22 at 11:59pm",
-  },
-  {
-    id: "4",
-    title: "Academic Integrity Assignment (Spring 2026)",
-    dueDate: "Available until May 8 at 11:59pm | Due Feb 20 at 10:59pm | 1/1 pts",
-  },
-  {
-    id: "5",
-    title: "Week 4 - 5",
-    dueDate: "Due Feb 14 at 9pm",
-  },
-  {
-    id: "6",
-    title: "Stay Current Week 3-4",
-    dueDate: "Due Feb 9 at 11:59pm",
-  },
-  {
-    id: "7",
-    title: "Week 2-3 Stay Current",
-    dueDate: "Due Jan 30 at 9pm",
-  },
-  {
-    id: "8",
-    title: "Week 1-2 Stay Current",
-    dueDate: "Due Jan 26 at 11:59pm",
+    id: "special-topics",
+    name: "Special Topics in Tech Innovation & Entrepreneurship",
+    code: "ENGIN 183D-SEM-001",
+    upcoming: [
+      { id: "st-1", title: "Stay Current 7 - 8", dueDate: "Due Mar 8 at 11:59pm" },
+    ],
+    past: [
+      { id: "st-2", title: "Stay Current 6-7", dueDate: "Due Mar 1 at 11:59pm" },
+      { id: "st-3", title: "Stay Current 5-6", dueDate: "Due Feb 22 at 11:59pm" },
+      { id: "st-4", title: "Academic Integrity Assignment (Spring 2026)", dueDate: "Available until May 8 at 11:59pm | Due Feb 20 at 10:59pm | 1/1 pts" },
+      { id: "st-5", title: "Week 4 - 5", dueDate: "Due Feb 14 at 9pm" },
+      { id: "st-6", title: "Stay Current Week 3-4", dueDate: "Due Feb 9 at 11:59pm" },
+    ],
   },
 ];
 
@@ -69,12 +67,13 @@ export function Landing() {
   const navigate = useNavigate();
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDecomposeModal, setShowDecomposeModal] = useState(false);
+  const [activeCourse, setActiveCourse] = useState(courses[0]);
 
   useEffect(() => { document.title = "CalDaily — Focus your coursework"; }, []);
 
   const handleAssignmentClick = (assignment: Assignment) => {
-    // Only "Stay Current 7 - 8" is clickable
-    if (assignment.id === "upcoming-1") {
+    // Upcoming assignments are clickable
+    if (activeCourse.upcoming.some(a => a.id === assignment.id)) {
       setSelectedAssignment(assignment);
       setShowDecomposeModal(true);
     }
@@ -163,9 +162,25 @@ export function Landing() {
             <Menu className="size-5 text-neutral-600" />
           </button>
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-900 font-medium">ENGIN 183D-SEM-001</span>
+            <span className="text-neutral-900 font-medium">{activeCourse.code}</span>
             <span className="text-neutral-400">›</span>
             <span className="text-neutral-600">Assignments</span>
+          </div>
+          {/* Course switcher tabs */}
+          <div className="ml-auto flex gap-1">
+            {courses.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setActiveCourse(c)}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  activeCourse.id === c.id
+                    ? "bg-[#0374B5] text-white"
+                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                }`}
+              >
+                {c.name.length > 20 ? c.code : c.name}
+              </button>
+            ))}
           </div>
         </header>
 
@@ -249,7 +264,7 @@ export function Landing() {
               </button>
 
               <div className="bg-white border border-neutral-200 rounded">
-                {upcomingAssignments.map((assignment) => (
+                {activeCourse.upcoming.map((assignment) => (
                   <button
                     key={assignment.id}
                     onClick={() => handleAssignmentClick(assignment)}
@@ -279,7 +294,7 @@ export function Landing() {
               </button>
 
               <div className="bg-white border border-neutral-200 rounded">
-                {pastAssignments.map((assignment) => (
+                {activeCourse.past.map((assignment: Assignment) => (
                   <div
                     key={assignment.id}
                     className="w-full text-left p-4 border-b border-neutral-200 last:border-b-0"

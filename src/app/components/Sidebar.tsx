@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { LayoutDashboard, ListChecks, CalendarDays, Settings, Menu, X, Coffee } from "lucide-react";
+import { ListChecks, CalendarDays, Settings, Menu, X, Coffee } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "./Logo";
 
@@ -8,10 +8,9 @@ const BERKELEY_BLUE = "#003262";
 const CAL_GOLD = "#FDB515";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", path: "/dashboard",     Icon: LayoutDashboard },
-  { label: "Tasks",     path: "/decomposition", Icon: ListChecks },
-  { label: "Calendar",  path: "/calendar",      Icon: CalendarDays },
-  { label: "Settings",  path: "/settings",      Icon: Settings },
+  { label: "Tasks",    path: "/decomposition", Icon: ListChecks },
+  { label: "Calendar", path: "/calendar",      Icon: CalendarDays },
+  { label: "Settings", path: "/settings",      Icon: Settings },
 ] as const;
 
 export function Sidebar() {
@@ -40,7 +39,7 @@ export function Sidebar() {
             <Menu className="w-5 h-5" />
           </button>
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/decomposition")}
             className="text-left"
           >
             <span className="text-white font-bold text-[17px]" style={{ fontFamily: "var(--font-serif)" }}>
@@ -62,7 +61,7 @@ export function Sidebar() {
       >
         {/* Logo + collapse */}
         <div className="flex items-start justify-between px-5 py-6 border-b border-white/10">
-          <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3 text-left">
+          <button onClick={() => navigate("/decomposition")} className="flex items-center gap-3 text-left">
             <Logo size={84} />
             <div>
               <span className="text-white font-bold text-xl" style={{ fontFamily: "var(--font-serif)" }}>

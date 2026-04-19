@@ -373,7 +373,6 @@ function DraggableTask({ task, onOpen }: { task: CalTask; onOpen: (t: CalTask) =
           <div className={`line-clamp-2 font-medium ${task.completed ? "line-through opacity-60" : ""}`}>
             {task.name}
           </div>
-          <div className="text-[10px] opacity-70 mt-0.5">{task.estimatedTime}</div>
         </div>
         {task.completed && <CheckCircle2 className="size-3 opacity-60 flex-shrink-0 mt-0.5" />}
       </div>
