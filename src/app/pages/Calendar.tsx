@@ -36,7 +36,6 @@ import {
   updateTask,
   upsertScheduledTask,
 } from "../../lib/database";
-import { parseEstimatedMinutes } from "../../lib/database";
 import { syncWeekToGoogleCalendar } from "../../lib/googleCalendar";
 import type { ScheduledTask, Task as DBTask } from "../../lib/types";
 
@@ -317,16 +316,12 @@ function InboxTaskCard({ task }: { task: CalTask }) {
         <p className={`text-sm font-medium leading-snug mb-1 line-clamp-2 ${task.completed ? "line-through text-neutral-400" : "text-neutral-900"}`}>
           {task.name}
         </p>
-        <div className="flex items-center gap-2 text-xs text-neutral-500">
-          <Clock className="size-3 flex-shrink-0" />
-          <span>{task.estimatedTime}</span>
-          {task.dueDate && (
-            <>
-              <span className="text-neutral-300">·</span>
-              <span className="truncate">{task.dueDate}</span>
-            </>
-          )}
-        </div>
+        {task.dueDate && (
+          <div className="flex items-center gap-1.5 text-xs text-red-500 font-medium">
+            <Clock className="size-3 flex-shrink-0" />
+            <span className="truncate">Due {task.dueDate}</span>
+          </div>
+        )}
       </div>
       {cfg ? (
         <div className={`flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 ${cfg.bg} ${cfg.border} border`}>
@@ -444,6 +439,23 @@ export function Calendar() {
     return d;
   });
   const todayStr = new Date().toISOString().split("T")[0];
+
+  // Build a map: ISO date string → tasks due that day (from inbox)
+  const dueDateMap = (() => {
+    const map: Record<string, CalTask[]> = {};
+    const currentYear = new Date().getFullYear();
+    inboxTasks.forEach((task) => {
+      if (!task.dueDate) return;
+      // Try parsing "Mon, Mar 3", "Apr 19 at 11:59pm", "2026-04-19" etc.
+      const s = task.dueDate.replace(/ at .+/, "").trim();
+      const d = new Date(s + (s.match(/\d{4}/) ? "" : ` ${currentYear}`));
+      if (!isNaN(d.getTime())) {
+        const iso = d.toISOString().split("T")[0];
+        map[iso] = [...(map[iso] ?? []), task];
+      }
+    });
+    return map;
+  })();
 
   const currentWeek = (() => {
     const mon = weekDates[0];
@@ -599,8 +611,7 @@ export function Calendar() {
     // Read user settings
     const settings = user ? (await getProfile(user.id))?.settings : null;
     const workload = settings?.workloadPreference ?? 'balanced';
-    const timeEst  = settings?.timeEstimation ?? 'moderate';
-    const timeMultiplier = timeEst === 'conservative' ? 1.25 : timeEst === 'aggressive' ? 0.85 : 1.0;
+    void settings?.timeEstimation; // reserved for future use
 
     // Max slots per day before moving to next day (respects workload preference)
     const maxSlotsPerDay: Record<string, number[]> = {
@@ -637,19 +648,19 @@ export function Calendar() {
       return d.toISOString().split("T")[0];
     }
 
-    // Sort tasks: earliest due date first; no due date goes last
+    // Sort tasks: earliest due date first; past/null due dates go after future ones
     const sorted = [...unscheduled].sort((a, b) => {
       const da = parseDueDate(a.dueDate), db = parseDueDate(b.dueDate);
-      if (!da && !db) return 0;
-      if (!da) return 1;
-      if (!db) return -1;
-      return da.getTime() - db.getTime();
+      const futureA = da && da > today, futureB = db && db > today;
+      if (!futureA && !futureB) return 0;
+      if (!futureA) return 1;
+      if (!futureB) return -1;
+      return da!.getTime() - db!.getTime();
     });
 
-    // Track occupied slots per (weekStart, shortDay): weekOccupied[wkStart][shortDay] = Set<time>
+    // Track occupied slots per (weekStart, shortDay)
     const weekOccupied = new Map<string, Record<string, Set<string>>>();
 
-    // Pre-populate current week from the live schedule state
     const initWeek = (wkStart: string) => {
       if (weekOccupied.has(wkStart)) return;
       const entry: Record<string, Set<string>> = {};
@@ -663,34 +674,27 @@ export function Calendar() {
       });
     });
 
-    // daysOfWeek index (Mon=0…Sun=6) ↔ JS getDay() (Sun=0, Mon=1…Sat=6)
-    // dayIdx = (jsDay + 6) % 7
     const placements: Array<{ task: CalTask; day: string; time: string; wkStart: string }> = [];
 
     for (const task of sorted) {
       const due = parseDueDate(task.dueDate);
-      // Search from today; stop at due date (or 8 weeks out if no due date)
-      const deadline = due ?? new Date(today.getTime() + 56 * 24 * 60 * 60 * 1000);
-      const estMins  = parseEstimatedMinutes(task.estimatedTime) * timeMultiplier;
-      // Prefer scheduling at least estMins/60 days before deadline, minimum 1 day buffer
-      const bufferDays = Math.max(1, Math.ceil(estMins / 60));
-      const targetBy = new Date(deadline.getTime() - bufferDays * 24 * 60 * 60 * 1000);
-      // Search start: today or (targetBy - 7 days) so we start filling early enough
-      const searchStart = new Date(Math.max(today.getTime(), targetBy.getTime() - 7 * 24 * 60 * 60 * 1000));
+      // If due date is in the future, schedule up to it; otherwise schedule within next 2 weeks
+      const effectiveDue = (due && due > today)
+        ? due
+        : new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
 
+      // Always start searching from today so tasks land in the current/upcoming week
       let placed = false;
-      // Phase 1: search from searchStart → deadline
-      for (let d = new Date(searchStart); d <= deadline && !placed; d.setDate(d.getDate() + 1)) {
-        const jsDay = d.getDay(); // 0=Sun
-        const dayIdx = (jsDay + 6) % 7; // Mon=0
-        if (dailyCaps[dayIdx] === 0) continue; // weekend (or zero-weight day)
+      for (let d = new Date(today); d <= effectiveDue && !placed; d.setDate(d.getDate() + 1)) {
+        const jsDay = d.getDay();
+        const dayIdx = (jsDay + 6) % 7;
+        if (dailyCaps[dayIdx] === 0) continue;
 
         const shortDay = daysOfWeek[dayIdx];
         const wkStart  = weekStartOf(d);
         initWeek(wkStart);
         const occupied = weekOccupied.get(wkStart)![shortDay];
 
-        // Respect daily cap
         if (occupied.size >= dailyCaps[dayIdx]) continue;
 
         const free = workSlots.filter((s) => !occupied.has(s));
@@ -702,7 +706,7 @@ export function Calendar() {
         placed = true;
       }
 
-      // Phase 2: fallback — find any free slot starting from today
+      // Fallback: find any slot from today onwards if deadline window was too tight
       if (!placed) {
         for (let d = new Date(today); !placed; d.setDate(d.getDate() + 1)) {
           const jsDay = d.getDay();
@@ -712,6 +716,7 @@ export function Calendar() {
           const wkStart  = weekStartOf(d);
           initWeek(wkStart);
           const occupied = weekOccupied.get(wkStart)![shortDay];
+          if (occupied.size >= dailyCaps[dayIdx]) continue;
           const free = workSlots.filter((s) => !occupied.has(s));
           if (free.length > 0) {
             const time = free[0];
@@ -903,8 +908,10 @@ export function Calendar() {
                   <div className="grid grid-cols-[72px_repeat(7,1fr)] border-b border-neutral-300 bg-neutral-50">
                     <div className="p-3 border-r border-neutral-200" />
                     {daysOfWeek.map((day, i) => {
-                      const isToday = weekDates[i].toISOString().split("T")[0] === todayStr;
+                      const isoDate = weekDates[i].toISOString().split("T")[0];
+                      const isToday = isoDate === todayStr;
                       const dateLabel = weekDates[i].toLocaleString("en-US", { month: "short", day: "numeric" });
+                      const dueTasks = dueDateMap[isoDate] ?? [];
                       return (
                         <div
                           key={day}
@@ -917,6 +924,18 @@ export function Calendar() {
                           <div className={`text-[10px] mt-0.5 ${isToday ? "text-[#FDB515] font-semibold" : "text-neutral-400"}`}>
                             {isToday ? "Today" : dateLabel}
                           </div>
+                          {dueTasks.length > 0 && (
+                            <div className="mt-1.5 flex flex-col gap-0.5">
+                              {dueTasks.slice(0, 2).map((t) => (
+                                <div key={t.id} className="bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded truncate leading-tight" title={t.name}>
+                                  DUE: {t.name.length > 12 ? t.name.slice(0, 12) + "…" : t.name}
+                                </div>
+                              ))}
+                              {dueTasks.length > 2 && (
+                                <div className="text-[9px] text-red-500 font-semibold">+{dueTasks.length - 2} more due</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}

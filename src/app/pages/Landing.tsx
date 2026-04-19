@@ -1,328 +1,308 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  Menu, Search, File, X, Sparkles, 
-  User, LayoutDashboard, BookOpen, Users, 
-  Calendar, Inbox, Clock, Video, Scale, 
-  Heart, HelpCircle
+import {
+  Search, X, Sparkles, CheckCircle2, Clock,
+  ChevronDown, ChevronRight, Zap, BookOpen, AlertTriangle,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { AppNav } from "../components/AppNav";
 import { Logo } from "../components/Logo";
 
+const BERKELEY_BLUE = "#003262";
+const CAL_GOLD = "#FDB515";
+
 interface Assignment {
   id: string;
   title: string;
   dueDate: string;
-  availableUntil?: string;
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  courseColor: string;
   points?: string;
+  isUpcoming: boolean;
+  urgency?: "overdue" | "today" | "week" | "later";
 }
 
-interface Course {
-  id: string;
-  name: string;
-  code: string;
-  upcoming: Assignment[];
-  past: Assignment[];
-}
-
-const courses: Course[] = [
-  {
-    id: "challenge-lab",
-    name: "Challenge Lab",
-    code: "ENGIN 183C-003",
-    upcoming: [
-      { id: "cl-1", title: "Product Launch Story", dueDate: "Due Apr 19 at 11:59pm | -/5 pts" },
-      { id: "cl-2", title: "Extra Credit: SCET Nomination", dueDate: "Due Apr 25 at 11:59pm" },
-      { id: "cl-3", title: "Final Pitch Presentation + Tech Review", dueDate: "Due Apr 28 at 11:59pm | -/30 pts" },
-    ],
-    past: [
-      { id: "cl-4", title: "Value Proposition for each Persona Individual Submission", dueDate: "Closed | Due Apr 13 at 12:00pm | 1/2 pts" },
-      { id: "cl-5", title: "Value Proposition for each Persona Group Submission", dueDate: "Due Apr 12 at 11:59pm | 2/2 pts" },
-      { id: "cl-6", title: "Reflection on IIRs", dueDate: "Due Apr 3 at 11:59pm | 2/1 pts" },
-      { id: "cl-7", title: "Midterm Presentation - Final Customer Research Plan", dueDate: "Closed | Due Mar 18 at 11:30am | 28.5/30 pts" },
-      { id: "cl-8", title: "Business Model Canvas", dueDate: "Due Mar 15 at 11:59pm | 2/2 pts" },
-      { id: "cl-9", title: "Customer Research Plan and Persona", dueDate: "Closed | Due Mar 8 at 11:59pm | 2/2 pts" },
-    ],
-  },
-  {
-    id: "special-topics",
-    name: "Special Topics in Tech Innovation & Entrepreneurship",
-    code: "ENGIN 183D-SEM-001",
-    upcoming: [
-      { id: "st-1", title: "Stay Current 7 - 8", dueDate: "Due Mar 8 at 11:59pm" },
-    ],
-    past: [
-      { id: "st-2", title: "Stay Current 6-7", dueDate: "Due Mar 1 at 11:59pm" },
-      { id: "st-3", title: "Stay Current 5-6", dueDate: "Due Feb 22 at 11:59pm" },
-      { id: "st-4", title: "Academic Integrity Assignment (Spring 2026)", dueDate: "Available until May 8 at 11:59pm | Due Feb 20 at 10:59pm | 1/1 pts" },
-      { id: "st-5", title: "Week 4 - 5", dueDate: "Due Feb 14 at 9pm" },
-      { id: "st-6", title: "Stay Current Week 3-4", dueDate: "Due Feb 9 at 11:59pm" },
-    ],
-  },
+const COURSES = [
+  { id: "challenge-lab",   name: "Challenge Lab",      code: "ENGIN 183C-003",    color: BERKELEY_BLUE, shortName: "183C" },
+  { id: "product-mgmt",   name: "Product Management", code: "ENGIN 183D-SEM-001", color: "#1E6B4F",     shortName: "183D" },
 ];
+
+const PM_COLOR = "#1E6B4F";
+
+const ALL_ASSIGNMENTS: Assignment[] = [
+  // Challenge Lab — upcoming
+  { id: "cl-1", title: "Product Launch Story",                          dueDate: "Due Apr 19 at 11:59pm", points: "5 pts",  courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: true,  urgency: "today" },
+  { id: "cl-2", title: "Extra Credit: SCET Nomination",                 dueDate: "Due Apr 25 at 11:59pm", points: "EC",     courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: true,  urgency: "week" },
+  { id: "cl-3", title: "Final Pitch Presentation + Tech Review",        dueDate: "Due Apr 28 at 11:59pm", points: "30 pts", courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: true,  urgency: "week" },
+  // Product Management — upcoming
+  { id: "pm-1", title: "Stay Current 12 - 13",                          dueDate: "Due Apr 19 at 11:59pm", points: "0 pts",  courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: true,  urgency: "today" },
+  // Challenge Lab — past
+  { id: "cl-4", title: "Value Proposition — Individual Submission",     dueDate: "Closed Apr 13",         points: "1/2",    courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: false },
+  { id: "cl-5", title: "Value Proposition — Group Submission",          dueDate: "Apr 12",                points: "2/2",    courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: false },
+  { id: "cl-6", title: "Reflection on IIRs",                           dueDate: "Apr 3",                 points: "2/1",    courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: false },
+  { id: "cl-7", title: "Midterm Presentation — Customer Research Plan", dueDate: "Closed Mar 18",         points: "28.5/30",courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: false },
+  { id: "cl-8", title: "Business Model Canvas",                         dueDate: "Mar 15",                points: "2/2",    courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: false },
+  { id: "cl-9", title: "Customer Research Plan and Persona",            dueDate: "Closed Mar 8",          points: "2/2",    courseId: "challenge-lab", courseName: "Challenge Lab",      courseCode: "183C", courseColor: BERKELEY_BLUE, isUpcoming: false },
+  // Product Management — past
+  { id: "pm-2", title: "Week 11 - 12",                                  dueDate: "Apr 13 at 11:59pm",     points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-3", title: "Stay Current 10 - 11",                          dueDate: "Apr 5 at 11:59pm",      points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-4", title: "Stay Current 9 - 10",                           dueDate: "Mar 29 at 11:59pm",     points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-5", title: "Stay Current 8 - 9",                            dueDate: "Mar 15 at 11:59pm",     points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-6", title: "Stay Current 7 - 8",                            dueDate: "Mar 8 at 11:59pm",      points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-7", title: "Stay Current 6 - 7",                            dueDate: "Mar 1 at 11:59pm",      points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-8", title: "Stay Current 5 - 6",                            dueDate: "Feb 22 at 11:59pm",     points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-9", title: "Academic Integrity Assignment (Spring 2026)",   dueDate: "Feb 20 at 10:59pm",     points: "1/1",    courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-10", title: "Week 4 - 5",                                   dueDate: "Feb 16 at 5:00pm",      points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+  { id: "pm-11", title: "Stay Current Week 3 - 4",                      dueDate: "Feb 9 at 11:59pm",      points: "0",      courseId: "product-mgmt",  courseName: "Product Management", courseCode: "183D", courseColor: PM_COLOR,      isUpcoming: false },
+];
+
+const URGENCY_CONFIG = {
+  today:   { label: "Due Today",      bg: "#FEF2F2", border: "#FCA5A5", text: "#DC2626", dot: "#EF4444" },
+  week:    { label: "Due This Week",  bg: "#FFFBEB", border: "#FCD34D", text: "#B45309", dot: CAL_GOLD  },
+  later:   { label: "Coming Up",      bg: "#EFF6FF", border: "#93C5FD", text: "#1D4ED8", dot: "#3B82F6" },
+  overdue: { label: "Overdue",        bg: "#FEF2F2", border: "#FCA5A5", text: "#DC2626", dot: "#EF4444" },
+};
+
+function CourseBadge({ code, color }: { code: string; color: string }) {
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold tracking-wide text-white shrink-0"
+      style={{ backgroundColor: color }}
+    >
+      {code}
+    </span>
+  );
+}
+
+function TaskCard({ assignment, onDecompose }: { assignment: Assignment; onDecompose: (a: Assignment) => void }) {
+  const urgCfg = assignment.urgency ? URGENCY_CONFIG[assignment.urgency] : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      onClick={() => onDecompose(assignment)}
+      className="bg-white rounded-xl border border-neutral-200 px-6 py-5 flex items-center gap-5 shadow-sm hover:shadow-md hover:border-neutral-300 transition-all cursor-pointer group"
+    >
+      {/* Left accent bar */}
+      <div className="w-1.5 h-14 rounded-full shrink-0" style={{ backgroundColor: assignment.courseColor }} />
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-2">
+          <CourseBadge code={assignment.courseCode} color={assignment.courseColor} />
+          {urgCfg && (
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold"
+              style={{ backgroundColor: urgCfg.bg, color: urgCfg.text, border: `1px solid ${urgCfg.border}` }}
+            >
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: urgCfg.dot }} />
+              {urgCfg.label}
+            </span>
+          )}
+        </div>
+        <p className="text-base font-semibold text-neutral-900 truncate group-hover:text-[#003262] transition-colors">{assignment.title}</p>
+        <p className="text-sm text-neutral-500 mt-1 flex items-center gap-1.5">
+          <Clock className="size-4 shrink-0" />
+          {assignment.dueDate}
+          {assignment.points && (
+            <span className="ml-1 text-neutral-400">· {assignment.points}</span>
+          )}
+        </p>
+      </div>
+
+      {/* Hint arrow */}
+      <Sparkles className="size-5 shrink-0 text-neutral-300 group-hover:text-[#003262] transition-colors" />
+    </motion.div>
+  );
+}
+
+function PastTaskRow({ assignment }: { assignment: Assignment }) {
+  return (
+    <div className="flex items-center gap-4 px-6 py-4 border-b border-neutral-100 last:border-0">
+      <CheckCircle2 className="size-5 text-green-500 shrink-0" />
+      <CourseBadge code={assignment.courseCode} color={assignment.courseColor} />
+      <span className="flex-1 text-sm font-medium text-neutral-600 truncate">{assignment.title}</span>
+      <span className="text-sm text-neutral-400 shrink-0">{assignment.dueDate}</span>
+      {assignment.points && (
+        <span className="text-sm font-semibold text-neutral-500 shrink-0 min-w-[48px] text-right">{assignment.points}</span>
+      )}
+    </div>
+  );
+}
 
 export function Landing() {
   const navigate = useNavigate();
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDecomposeModal, setShowDecomposeModal] = useState(false);
-  const [activeCourse, setActiveCourse] = useState(courses[0]);
+  const [filterCourse, setFilterCourse] = useState<string>("all");
+  const [query, setQuery] = useState("");
+  const [pastExpanded, setPastExpanded] = useState(false);
 
-  useEffect(() => { document.title = "CalDaily — Focus your coursework"; }, []);
+  useEffect(() => { document.title = "CalDaily — My Courses"; }, []);
 
-  const handleAssignmentClick = (assignment: Assignment) => {
-    // Upcoming assignments are clickable
-    if (activeCourse.upcoming.some(a => a.id === assignment.id)) {
-      setSelectedAssignment(assignment);
-      setShowDecomposeModal(true);
-    }
+  const handleDecompose = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+    setShowDecomposeModal(true);
   };
 
-  const handleDecompose = () => {
-    navigate("/decomposition");
-  };
+  const filtered = ALL_ASSIGNMENTS.filter(a => {
+    const matchCourse = filterCourse === "all" || a.courseId === filterCourse || (filterCourse === "special-topics" && a.courseId === "product-mgmt");
+    const matchQuery = !query || a.title.toLowerCase().includes(query.toLowerCase());
+    return matchCourse && matchQuery;
+  });
+
+  const upcoming = filtered.filter(a => a.isUpcoming);
+  const past = filtered.filter(a => !a.isUpcoming);
+
+  const todayCount = ALL_ASSIGNMENTS.filter(a => a.isUpcoming && a.urgency === "today").length;
+  const weekCount  = ALL_ASSIGNMENTS.filter(a => a.isUpcoming && (a.urgency === "today" || a.urgency === "week")).length;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F0F2F5" }}>
       <AppNav backTo="/" />
-      <div className="flex flex-1">
-      {/* Global Canvas Sidebar */}
-      <aside className="w-[68px] bg-[#2C3E50] text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
-        {/* Logo */}
-        <div className="h-[84px] flex items-center justify-center mb-2">
-          <Logo size={84} />
-        </div>
 
-        {/* Nav Icons */}
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <User className="size-5" />
-          <span className="leading-tight">Account</span>
-        </button>
+      {/* ── Page header ───────────────────────────────────────────── */}
+      <div style={{ backgroundColor: BERKELEY_BLUE }} className="px-8 pt-8 pb-0">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-end justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Logo size={48} />
+              <div>
+                <h1 className="text-white text-3xl font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                  My Courses
+                </h1>
+                <p className="text-white/60 text-base mt-0.5">Spring 2026 · 2 courses synced</p>
+              </div>
+            </div>
 
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <LayoutDashboard className="size-5" />
-          <span className="leading-tight">Dashboard</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 bg-white/10 rounded text-[10px] text-center">
-          <BookOpen className="size-5" />
-          <span className="leading-tight">Courses</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Users className="size-5" />
-          <span className="leading-tight">Groups</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Calendar className="size-5" />
-          <span className="leading-tight">Calendar</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Inbox className="size-5" />
-          <span className="leading-tight">Inbox</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Clock className="size-5" />
-          <span className="leading-tight">History</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Video className="size-5" />
-          <span className="leading-tight">My Media</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Scale className="size-5" />
-          <span className="leading-tight text-[9px]">Student Rights</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center">
-          <Heart className="size-5" />
-          <span className="leading-tight text-[9px]">Mental Health</span>
-        </button>
-
-        <div className="flex-1" />
-
-        <button className="flex flex-col items-center gap-1 p-2 hover:bg-white/10 rounded text-[10px] text-center relative">
-          <HelpCircle className="size-5" />
-          <span className="leading-tight">Help</span>
-          <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <header className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center gap-4">
-          <button className="p-2 hover:bg-neutral-100 rounded">
-            <Menu className="size-5 text-neutral-600" />
-          </button>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-900 font-medium">{activeCourse.code}</span>
-            <span className="text-neutral-400">›</span>
-            <span className="text-neutral-600">Assignments</span>
+            {/* Stats pills */}
+            <div className="flex gap-3 mb-1">
+              {todayCount > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-white">
+                  <AlertTriangle className="size-4" />
+                  {todayCount} due today
+                </div>
+              )}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold" style={{ backgroundColor: CAL_GOLD, color: BERKELEY_BLUE }}>
+                <Zap className="size-4" />
+                {weekCount} due this week
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white">
+                <BookOpen className="size-4" />
+                {COURSES.length} courses
+              </div>
+            </div>
           </div>
-          {/* Course switcher tabs */}
-          <div className="ml-auto flex gap-1">
-            {courses.map((c) => (
+
+          {/* Course filter tabs */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => setFilterCourse("all")}
+              className="px-6 py-3 text-base font-medium rounded-t-lg transition-colors"
+              style={{
+                backgroundColor: filterCourse === "all" ? "#F0F2F5" : "transparent",
+                color: filterCourse === "all" ? BERKELEY_BLUE : "rgba(255,255,255,0.7)",
+              }}
+            >
+              All Courses
+            </button>
+            {COURSES.map(c => (
               <button
                 key={c.id}
-                onClick={() => setActiveCourse(c)}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                  activeCourse.id === c.id
-                    ? "bg-[#0374B5] text-white"
-                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-                }`}
+                onClick={() => setFilterCourse(c.id)}
+                className="px-6 py-3 text-base font-medium rounded-t-lg transition-colors flex items-center gap-2"
+                style={{
+                  backgroundColor: filterCourse === c.id ? "#F0F2F5" : "transparent",
+                  color: filterCourse === c.id ? BERKELEY_BLUE : "rgba(255,255,255,0.7)",
+                }}
               >
-                {c.name.length > 20 ? c.code : c.name}
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: filterCourse === c.id ? c.color : "rgba(255,255,255,0.5)" }} />
+                {c.name}
+                <span className="text-[10px] opacity-60">{c.shortName}</span>
               </button>
             ))}
           </div>
-        </header>
-
-        <div className="flex flex-1">
-          {/* Course Sidebar */}
-          <aside className="w-[200px] bg-white border-r border-neutral-200 pt-4 flex-shrink-0">
-            <div className="text-xs text-neutral-500 px-4 mb-3">Spring 2026</div>
-            <nav className="space-y-0.5">
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Home
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Announcements
-              </a>
-              <a
-                href="#"
-                className="block px-4 py-2.5 text-sm text-neutral-900 font-medium bg-neutral-100 border-l-[3px] border-[#0374B5]"
-              >
-                Assignments
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Discussions
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 flex items-center justify-between">
-                Grades
-                <span className="size-5 flex items-center justify-center bg-[#0374B5] text-white text-[10px] rounded-full font-medium">
-                  2
-                </span>
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                People
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Files
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Syllabus
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Collaborations
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Chat
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Media Gallery
-              </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
-                Academic Integrity
-              </a>
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 bg-[#F5F5F5] p-6 overflow-y-auto">
-            {/* Search and Filter Bar */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="relative w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-[#00AC18] text-white text-xs font-semibold rounded hover:bg-[#009915]">
-                  SHOW BY DATE
-                </button>
-                <button className="px-4 py-2 border border-neutral-300 bg-white text-neutral-700 text-xs font-semibold rounded hover:bg-neutral-50">
-                  SHOW BY TYPE
-                </button>
-              </div>
-            </div>
-
-            {/* Upcoming Assignments */}
-            <div className="mb-6">
-              <button className="mb-3 flex items-center gap-2 text-neutral-700 hover:text-neutral-900">
-                <span className="text-sm">▸</span>
-                <h2 className="text-base font-semibold">Upcoming Assignments</h2>
-              </button>
-
-              <div className="bg-white border border-neutral-200 rounded">
-                {activeCourse.upcoming.map((assignment) => (
-                  <button
-                    key={assignment.id}
-                    onClick={() => handleAssignmentClick(assignment)}
-                    className="w-full text-left p-4 hover:bg-neutral-50 transition-colors group border-b border-neutral-200 last:border-b-0"
-                  >
-                    <div className="flex items-start gap-3">
-                      <File className="size-5 text-neutral-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm text-[#0374B5] hover:underline font-normal">
-                          {assignment.title}
-                        </h3>
-                        <div className="text-xs text-neutral-600 mt-1">
-                          {assignment.dueDate}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Past Assignments */}
-            <div>
-              <button className="mb-3 flex items-center gap-2 text-neutral-700 hover:text-neutral-900">
-                <span className="text-sm">▸</span>
-                <h2 className="text-base font-semibold">Past Assignments</h2>
-              </button>
-
-              <div className="bg-white border border-neutral-200 rounded">
-                {activeCourse.past.map((assignment: Assignment) => (
-                  <div
-                    key={assignment.id}
-                    className="w-full text-left p-4 border-b border-neutral-200 last:border-b-0"
-                  >
-                    <div className="flex items-start gap-3">
-                      <File className="size-5 text-neutral-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm text-neutral-700 font-normal">
-                          {assignment.title}
-                        </h3>
-                        <div className="text-xs text-neutral-600 mt-1">
-                          {assignment.dueDate}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </main>
         </div>
       </div>
 
-      {/* Decompose Modal (Chrome Extension Style) */}
+      {/* ── Main content ──────────────────────────────────────────── */}
+      <main className="flex-1 px-8 py-8">
+        <div className="max-w-4xl mx-auto space-y-8">
+
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              type="text"
+              placeholder="Search assignments across all courses…"
+              className="w-full pl-12 pr-4 py-4 bg-white border border-neutral-200 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Upcoming tasks */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-neutral-800 flex items-center gap-2">
+                <Zap className="size-5" style={{ color: CAL_GOLD }} />
+                Upcoming Assignments
+                <span className="ml-1 text-sm font-normal text-neutral-500">({upcoming.length})</span>
+              </h2>
+              <p className="text-sm text-neutral-400">Click any task to plan it with AI</p>
+            </div>
+
+            {upcoming.length === 0 ? (
+              <div className="bg-white rounded-xl border border-neutral-200 p-10 text-center text-neutral-400 text-sm">
+                No upcoming assignments
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map(a => (
+                  <TaskCard key={a.id} assignment={a} onDecompose={handleDecompose} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Past / completed */}
+          <section>
+            <button
+              onClick={() => setPastExpanded(v => !v)}
+              className="flex items-center gap-2 text-xl font-semibold text-neutral-800 mb-4 hover:text-neutral-600 transition-colors"
+            >
+              {pastExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+              <CheckCircle2 className="size-5 text-green-500" />
+              Completed Assignments
+              <span className="text-sm font-normal text-neutral-500">({past.length})</span>
+            </button>
+
+            <AnimatePresence>
+              {pastExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-white rounded-xl border border-neutral-200 shadow-sm">
+                    {past.map(a => <PastTaskRow key={a.id} assignment={a} />)}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+        </div>
+      </main>
+
+      {/* ── Decompose Modal ───────────────────────────────────────── */}
       <AnimatePresence>
         {showDecomposeModal && selectedAssignment && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -331,53 +311,59 @@ export function Landing() {
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
             />
 
-            {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg"
             >
-              <div className="bg-white rounded-lg shadow-2xl border border-neutral-200 overflow-hidden">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 relative">
+              <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden">
+                {/* Modal header */}
+                <div className="p-6 relative" style={{ backgroundColor: BERKELEY_BLUE }}>
                   <button
                     onClick={() => setShowDecomposeModal(false)}
-                    className="absolute top-4 right-4 p-1 hover:bg-white/20 rounded"
+                    className="absolute top-4 right-4 p-1 hover:bg-white/20 rounded text-white"
                   >
                     <X className="size-5" />
                   </button>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="size-10 bg-white/20 rounded-lg flex items-center justify-center">
-                      <Sparkles className="size-6" />
+                    <div className="size-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Sparkles className="size-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">CalDaily</h2>
-                      <p className="text-sm text-blue-100">AI-Powered Task Breakdown</p>
+                      <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-serif)" }}>CalDaily AI</h2>
+                      <p className="text-sm text-white/70">Smart Task Breakdown</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Content */}
+                {/* Modal body */}
                 <div className="p-6">
                   <div className="mb-4">
-                    <div className="text-xs text-neutral-500 mb-1">Selected Assignment</div>
-                    <h3 className="font-semibold text-neutral-900">{selectedAssignment.title}</h3>
-                    <p className="text-sm text-neutral-600 mt-1">{selectedAssignment.dueDate}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CourseBadge code={selectedAssignment.courseCode} color={selectedAssignment.courseColor} />
+                      <span className="text-xs text-neutral-500">{selectedAssignment.courseName}</span>
+                    </div>
+                    <h3 className="font-semibold text-neutral-900 text-lg">{selectedAssignment.title}</h3>
+                    <p className="text-sm text-neutral-500 mt-1 flex items-center gap-1.5">
+                      <Clock className="size-3.5" />
+                      {selectedAssignment.dueDate}
+                    </p>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <p className="text-sm text-blue-900">
-                      <strong>✨ What happens next:</strong> We'll break this assignment into bite-sized, execution-ready
-                      tasks with time estimates. You'll review everything before it's added to your workspace.
+                  <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: `${BERKELEY_BLUE}08`, border: `1px solid ${BERKELEY_BLUE}20` }}>
+                    <p className="text-sm" style={{ color: BERKELEY_BLUE }}>
+                      <strong>✨ What happens next:</strong> CalDaily will break this into bite-sized, execution-ready
+                      tasks with time estimates and schedule them across your week automatically.
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     <Button
-                      onClick={handleDecompose}
+                      onClick={() => navigate("/decomposition")}
                       size="lg"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+                      className="w-full h-12 text-base font-semibold"
+                      style={{ backgroundColor: BERKELEY_BLUE, color: "white" }}
                     >
                       <Sparkles className="size-5 mr-2" />
                       Decompose into Tasks
@@ -392,7 +378,7 @@ export function Landing() {
                     </Button>
                   </div>
 
-                  <p className="text-xs text-neutral-500 text-center mt-4">
+                  <p className="text-xs text-neutral-400 text-center mt-4">
                     You'll review and approve all tasks before they're added to your calendar.
                   </p>
                 </div>
@@ -401,7 +387,6 @@ export function Landing() {
           </>
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 }

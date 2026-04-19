@@ -237,7 +237,7 @@ function HighlightedAssignmentText({
         if (isNumberedTask) {
           return (
             <p key={index} className="!mb-2 !mt-3">
-              <span className="font-semibold text-neutral-900 bg-yellow-100 px-1 rounded">
+              <span className="font-bold text-neutral-900 bg-yellow-300 px-1.5 py-0.5 rounded">
                 {line}
               </span>
             </p>
@@ -246,7 +246,7 @@ function HighlightedAssignmentText({
         if (hasActionWord && !isNumberedTask) {
           return (
             <p key={index} className="!mb-1 pl-4">
-              <span className="text-neutral-800 bg-blue-50 px-1 rounded font-medium">
+              <span className="text-blue-900 bg-blue-200 px-1.5 py-0.5 rounded font-semibold">
                 {line}
               </span>
             </p>
@@ -255,7 +255,7 @@ function HighlightedAssignmentText({
         if (hasDueDate || hasGrading) {
           return (
             <p key={index} className="!mb-1">
-              <span className="text-neutral-700 bg-orange-50 px-1 rounded italic">
+              <span className="text-red-800 bg-red-100 border border-red-300 px-1.5 py-0.5 rounded font-medium">
                 {line}
               </span>
             </p>
@@ -657,11 +657,30 @@ function DecompositionContent() {
                   <p className="text-sm text-neutral-500">Due {mockRawAssignment.dueDate}</p>
                 </div>
 
-                {/* Hint */}
-                <div className="px-4 pt-3 pb-0">
-                  <p className="text-xs text-neutral-400 italic">
-                    Highlight any text to create a task from it
-                  </p>
+                {/* Selection hint banner */}
+                <div className="mx-4 mt-3 mb-0 rounded-xl bg-amber-50 border-2 border-amber-300 overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-200 bg-amber-100">
+                    <span className="text-xl">✏️</span>
+                    <p className="text-sm font-bold text-amber-900">
+                      Try it: highlight any text below to create a task
+                    </p>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-amber-800 mb-2 font-medium">For example, select text like this:</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 rounded-lg px-3 py-2 text-sm font-semibold bg-blue-600 text-white select-none shadow-sm">
+                        "Choose the CORE feature of your app"
+                      </div>
+                      <span className="text-amber-700 text-lg">→</span>
+                      <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-semibold shadow-sm whitespace-nowrap">
+                        <Plus className="size-3.5" />
+                        Create Task
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-amber-700 mt-2">
+                      Mix manual selections with AI decomposition for full control.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Assignment Description */}
@@ -710,15 +729,30 @@ function DecompositionContent() {
               )}
             </div>
 
-            {/* AI Assist button — always visible at top of right panel */}
+            {/* Top action buttons */}
             {!decomposing && (
-              <div className="mb-4">
+              <div className="mb-4 flex flex-col gap-2">
+                {hasTasks && (
+                  <Button
+                    onClick={handleContinueToCalendar}
+                    disabled={saving}
+                    size="lg"
+                    className="w-full text-white font-semibold"
+                    style={{ backgroundColor: "#003262" }}
+                  >
+                    {saving ? (
+                      <><Wand2 className="size-4 mr-2 animate-spin" />Saving tasks…</>
+                    ) : (
+                      <><Calendar className="size-4 mr-2" />Continue to Calendar<ChevronRight className="size-4 ml-2" /></>
+                    )}
+                  </Button>
+                )}
                 <Button
                   onClick={handleDecompose}
                   className="w-full bg-neutral-900 hover:bg-neutral-800 text-white"
                 >
                   <Wand2 className="size-4 mr-2" />
-                  AI Assist — Decompose All
+                  {hasTasks ? "Re-run AI Decomposition" : "AI Assist — Decompose All"}
                 </Button>
               </div>
             )}
@@ -800,30 +834,9 @@ function DecompositionContent() {
                     ))}
                   </div>
 
-                  {/* Continue Button */}
-                  <div className="pt-4">
-                    <Button
-                      onClick={handleContinueToCalendar}
-                      disabled={saving}
-                      size="lg"
-                      className="w-full bg-neutral-900 hover:bg-neutral-800 text-white"
-                    >
-                      {saving ? (
-                        <>
-                          <Wand2 className="size-4 mr-2 animate-spin" />
-                          Saving tasks…
-                        </>
-                      ) : (
-                        <>
-                          Continue to Calendar
-                          <ChevronRight className="size-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-xs text-neutral-500 text-center mt-2">
-                      {user ? "Tasks will be saved to your account" : "Sign in to save your tasks across sessions"}
-                    </p>
-                  </div>
+                  <p className="text-xs text-neutral-500 text-center pt-2">
+                    {user ? "Tasks will be saved to your account" : "Sign in to save your tasks across sessions"}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
