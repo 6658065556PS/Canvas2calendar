@@ -6,6 +6,7 @@ import { Decomposition } from "./pages/Decomposition";
 import { Review } from "./pages/Review";
 import { Calendar } from "./pages/Calendar";
 import { Settings } from "./pages/Settings";
+import { Export } from "./pages/Export";
 import { Auth } from "./pages/Auth";
 import { AuthCallback } from "./pages/AuthCallback";
 import { Workspace } from "./pages/Workspace";
@@ -58,5 +59,9 @@ export const router = createBrowserRouter([
   {
     path: "/settings",
     element: <ProtectedRoute><Settings /></ProtectedRoute>,
+  },
+  {
+    path: "/export",
+    element: <ProtectedRoute><Export /></ProtectedRoute>,
   },
 ]);

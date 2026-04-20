@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { ListChecks, CalendarDays, Settings, Menu, X, Coffee } from "lucide-react";
+import { ListChecks, CalendarDays, Share2, Menu, X, Coffee } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "./Logo";
 
@@ -10,7 +10,7 @@ const CAL_GOLD = "#FDB515";
 const NAV_ITEMS = [
   { label: "Tasks",    path: "/decomposition", Icon: ListChecks },
   { label: "Calendar", path: "/calendar",      Icon: CalendarDays },
-  { label: "Settings", path: "/settings",      Icon: Settings },
+  { label: "Export",   path: "/export",        Icon: Share2 },
 ] as const;
 
 export function Sidebar() {

@@ -455,6 +455,7 @@ function DecompositionContent() {
   const { user } = useAuth();
   const [decomposing, setDecomposing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [decomposeStep, setDecomposeStep] = useState(0); // 0=none,1=parsed,2=detected,3=hidden
   const [saving, setSaving] = useState(false);
   const [tasks, setTasks] = useState<DecomposedTask[]>([]);
   const [selectionPopup, setSelectionPopup] = useState<SelectionPopup | null>(null);
@@ -505,18 +506,24 @@ function DecompositionContent() {
   const handleDecompose = () => {
     setDecomposing(true);
     setProgress(0);
+    setDecomposeStep(0);
 
+    // Show step 1 at ~33%, step 2 at ~66%, step 3 at ~90%, finish at 100%
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
+        const next = prev + 2.5;
+        if (next >= 33 && prev < 33) setDecomposeStep(1);
+        if (next >= 66 && prev < 66) setDecomposeStep(2);
+        if (next >= 90 && prev < 90) setDecomposeStep(3);
+        if (next >= 100) {
           clearInterval(interval);
           setDecomposing(false);
           setTasks(aiDecomposedTasks);
           return 100;
         }
-        return prev + 2;
+        return next;
       });
-    }, 30);
+    }, 40); // ~4 seconds total → snappy feeling
   };
 
   const handleContinueToCalendar = async () => {
@@ -765,13 +772,40 @@ function DecompositionContent() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="bg-white rounded-lg border border-neutral-200 p-12 text-center"
+                  className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden"
                 >
-                  <div className="size-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center animate-pulse">
-                    <Sparkles className="size-8 text-blue-600" />
+                  {/* Progress bar */}
+                  <div className="h-1 bg-neutral-100">
+                    <motion.div
+                      className="h-full bg-[#003262]"
+                      style={{ width: `${progress}%` }}
+                      transition={{ duration: 0.1 }}
+                    />
                   </div>
-                  <p className="text-neutral-600 font-medium">Decomposing assignment...</p>
-                  <p className="text-sm text-neutral-500 mt-2">AI is extracting micro-tasks</p>
+                  <div className="p-10 text-center">
+                    <div className="size-14 mx-auto mb-6 bg-[#003262] rounded-2xl flex items-center justify-center">
+                      <Sparkles className="size-7 text-[#FDB515] animate-pulse" />
+                    </div>
+                    <p className="text-lg font-semibold text-neutral-900 mb-6">Analyzing assignment…</p>
+                    <div className="text-left max-w-xs mx-auto space-y-3">
+                      {[
+                        "Instructions parsed",
+                        "Tasks detected",
+                        "Hidden coursework identified",
+                      ].map((label, i) => (
+                        <div key={label} className="flex items-center gap-3">
+                          {decomposeStep > i ? (
+                            <CheckCircle2 className="size-5 text-green-500 shrink-0" />
+                          ) : (
+                            <div className={`size-5 rounded-full border-2 shrink-0 ${decomposeStep === i ? "border-[#003262] animate-pulse" : "border-neutral-200"}`} />
+                          )}
+                          <span className={`text-sm font-medium ${decomposeStep > i ? "text-neutral-900" : "text-neutral-400"}`}>
+                            {label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -802,22 +836,16 @@ function DecompositionContent() {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6"
                 >
-                  {/* Summary */}
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="size-5 text-green-600" />
-                      <h3 className="font-semibold text-neutral-900">
-                        {tasks.length} task{tasks.length !== 1 ? "s" : ""} ready
-                      </h3>
-                    </div>
-                    <p className="text-sm text-neutral-600 mb-3">
-                      Drag to prioritize · Set type on each task · Highlight left panel to add more
-                    </p>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="size-4 text-neutral-500" />
-                      <span className="text-neutral-600">
-                        Total estimated time: <span className="font-semibold">4.2 hours</span>
-                      </span>
+                  {/* Confidence banner */}
+                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 flex items-start gap-3">
+                    <CheckCircle2 className="size-5 text-green-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-green-900">
+                        {tasks.length} task{tasks.length !== 1 ? "s" : ""} extracted — each links back to the original instruction
+                      </p>
+                      <p className="text-xs text-green-700 mt-0.5">
+                        Drag to prioritize · Set type on each task · Highlight left panel to add more
+                      </p>
                     </div>
                   </div>
 

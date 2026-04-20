@@ -161,6 +161,26 @@ export function Landing() {
   const todayCount = ALL_ASSIGNMENTS.filter(a => a.isUpcoming && a.urgency === "today").length;
   const weekCount  = ALL_ASSIGNMENTS.filter(a => a.isUpcoming && (a.urgency === "today" || a.urgency === "week")).length;
 
+  // Weekly workload strip — count upcoming tasks per weekday (Mon-Sun)
+  const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const today = new Date();
+  const mondayOffset = (today.getDay() + 6) % 7; // 0=Mon
+  const weekDates = WEEK_DAYS.map((_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - mondayOffset + i);
+    return d;
+  });
+  // Assign upcoming tasks to days based on urgency (today → today's date, week → spread across remaining days)
+  const workloadPerDay = weekDates.map((d, i) => {
+    const iso = d.toISOString().split("T")[0];
+    const todayIso = today.toISOString().split("T")[0];
+    let count = 0;
+    if (iso === todayIso) count += ALL_ASSIGNMENTS.filter(a => a.isUpcoming && a.urgency === "today").length;
+    if (i >= mondayOffset && i < 5) count += ALL_ASSIGNMENTS.filter(a => a.isUpcoming && a.urgency === "week").length / Math.max(1, 5 - mondayOffset);
+    return Math.round(count);
+  });
+  const maxLoad = Math.max(1, ...workloadPerDay);
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F0F2F5" }}>
       <AppNav backTo="/" />
@@ -195,6 +215,30 @@ export function Landing() {
                 <BookOpen className="size-4" />
                 {COURSES.length} courses
               </div>
+            </div>
+          </div>
+
+          {/* Weekly workload strip */}
+          <div className="mb-5 bg-white/10 rounded-xl px-4 py-3">
+            <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-2">This week's workload</p>
+            <div className="flex gap-1.5 items-end h-10">
+              {WEEK_DAYS.map((day, i) => {
+                const load = workloadPerDay[i];
+                const isToday = i === mondayOffset;
+                const barH = load > 0 ? Math.max(20, Math.round((load / maxLoad) * 40)) : 6;
+                return (
+                  <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-sm transition-all"
+                      style={{
+                        height: barH,
+                        backgroundColor: isToday ? CAL_GOLD : load > 0 ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)",
+                      }}
+                    />
+                    <span className={`text-[10px] font-semibold ${isToday ? "text-[#FDB515]" : "text-white/50"}`}>{day}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

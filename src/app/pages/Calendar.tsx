@@ -71,7 +71,7 @@ const fullDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "S
 const timeSlots = [
   "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
   "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM",
-  "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM",
+  "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM", "11:59 PM",
 ];
 
 const categoryConfig: Record<string, {
@@ -86,6 +86,14 @@ const categoryConfig: Record<string, {
 };
 
 const defaultCardColor = "bg-neutral-100 border-neutral-300 text-neutral-900";
+
+// ─── Locked due-date anchors (mock data) ──────────────────────────────────────
+const MOCK_DUE_DATES = [
+  { id: "due-cl-1", title: "Product Launch Story",          date: "2026-04-19", courseCode: "183C", color: "#003262" },
+  { id: "due-pm-1", title: "Stay Current 12 - 13",          date: "2026-04-19", courseCode: "183D", color: "#1E6B4F" },
+  { id: "due-cl-2", title: "Extra Credit: SCET Nomination", date: "2026-04-25", courseCode: "183C", color: "#003262" },
+  { id: "due-cl-3", title: "Final Pitch + Tech Review",     date: "2026-04-28", courseCode: "183C", color: "#003262" },
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -378,12 +386,13 @@ function DraggableTask({ task, onOpen }: { task: CalTask; onOpen: (t: CalTask) =
 // ─── Calendar cell ────────────────────────────────────────────────────────────
 
 function CalendarCell({
-  day, time, tasks, isToday, onDrop, onOpen,
+  day, time, tasks, isToday, onDrop, onOpen, dueDateBlocks,
 }: {
   day: string; time: string; tasks: CalTask[];
   isToday?: boolean;
   onDrop: (task: CalTask) => void;
   onOpen: (task: CalTask) => void;
+  dueDateBlocks?: typeof MOCK_DUE_DATES;
 }) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ItemType,
@@ -391,15 +400,32 @@ function CalendarCell({
     collect: (monitor) => ({ isOver: monitor.isOver() }),
   }));
 
+  const hasDue = dueDateBlocks && dueDateBlocks.length > 0;
+
   return (
     <div
       ref={drop}
       className={`border-r border-b border-neutral-200 p-1 min-h-[60px] relative ${
-        isToday ? "bg-yellow-50/40" : "bg-white"
+        hasDue ? "bg-red-50/50" : isToday ? "bg-yellow-50/40" : "bg-white"
       } ${isOver ? "bg-blue-100 ring-2 ring-blue-500 ring-inset" : ""} hover:bg-neutral-50/50 transition-colors`}
       aria-label={`${day} at ${time}`}
       role="region"
     >
+      {/* Locked due-date blocks */}
+      {dueDateBlocks?.map((block) => (
+        <div
+          key={block.id}
+          title={`DUE: ${block.title} (${block.courseCode})`}
+          className="mb-1 rounded px-2 py-1.5 text-white text-[10px] font-bold cursor-default select-none flex flex-col gap-0.5 border border-red-600"
+          style={{ backgroundColor: "#DC2626" }}
+        >
+          <div className="flex items-center gap-1">
+            <span className="bg-white/25 rounded px-1 text-[9px] font-black shrink-0">{block.courseCode}</span>
+            <span className="bg-white/20 rounded px-1 text-[9px] font-black shrink-0">DUE</span>
+          </div>
+          <span className="truncate leading-tight">{block.title}</span>
+        </div>
+      ))}
       {tasks.map((task) => (
         <DraggableTask key={`${task.id}-${day}-${time}`} task={task} onOpen={onOpen} />
       ))}
@@ -943,24 +969,32 @@ export function Calendar() {
 
                   {/* Time slots */}
                   <div className="divide-y divide-neutral-200">
-                    {timeSlots.map((time) => (
-                      <div key={time} className="grid grid-cols-[72px_repeat(7,1fr)]">
-                        <div className="p-2 text-xs font-medium text-neutral-500 border-r border-neutral-200 bg-neutral-50 flex items-start pt-2">
-                          {time}
+                    {timeSlots.map((time) => {
+                      const isDueSlot = time === "11:59 PM";
+                      return (
+                        <div key={time} className={`grid grid-cols-[72px_repeat(7,1fr)] ${isDueSlot ? "bg-red-50/20" : ""}`}>
+                          <div className={`p-2 text-xs font-medium border-r border-neutral-200 bg-neutral-50 flex items-start pt-2 ${isDueSlot ? "text-red-500 font-bold" : "text-neutral-500"}`}>
+                            {isDueSlot ? "11:59 PM" : time}
+                          </div>
+                          {daysOfWeek.map((day, i) => {
+                            const isoDate = weekDates[i].toISOString().split("T")[0];
+                            const blocks = isDueSlot ? MOCK_DUE_DATES.filter(d => d.date === isoDate) : [];
+                            return (
+                              <CalendarCell
+                                key={`${day}-${time}`}
+                                day={day}
+                                time={time}
+                                tasks={schedule[day]?.[time] ?? []}
+                                isToday={weekDates[i].toISOString().split("T")[0] === todayStr}
+                                onDrop={(task) => handleDrop(day, time, task)}
+                                onOpen={openPanel}
+                                dueDateBlocks={blocks}
+                              />
+                            );
+                          })}
                         </div>
-                        {daysOfWeek.map((day, i) => (
-                          <CalendarCell
-                            key={`${day}-${time}`}
-                            day={day}
-                            time={time}
-                            tasks={schedule[day]?.[time] ?? []}
-                            isToday={weekDates[i].toISOString().split("T")[0] === todayStr}
-                            onDrop={(task) => handleDrop(day, time, task)}
-                            onOpen={openPanel}
-                          />
-                        ))}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
