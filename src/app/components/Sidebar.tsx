@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { ListChecks, CalendarDays, Share2, Menu, X, Coffee } from "lucide-react";
+import { ListChecks, CalendarDays, Share2, Menu, X, Coffee, LayoutGrid } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "./Logo";
 
@@ -80,6 +80,27 @@ export function Sidebar() {
 
         {/* Nav */}
         <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+          {/* My Courses — back to dashboard */}
+          {(() => {
+            const active = location.pathname === "/landing";
+            return (
+              <button
+                onClick={() => navigate("/landing")}
+                className="w-full flex items-center gap-3 px-4 py-3 mb-1 rounded-lg text-sm transition-all"
+                style={{
+                  backgroundColor: active ? CAL_GOLD : "rgba(255,255,255,0.07)",
+                  color: active ? BERKELEY_BLUE : "rgba(255,255,255,0.9)",
+                  fontWeight: active ? 600 : 400,
+                }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.15)"; }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+              >
+                <LayoutGrid className="size-[18px] shrink-0" />
+                My Courses
+              </button>
+            );
+          })()}
+          <div className="border-t border-white/10 my-2" />
           {NAV_ITEMS.map(({ label, path, Icon }) => {
             const active = location.pathname === path;
             return (
@@ -147,6 +168,14 @@ export function Sidebar() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex border-t"
         style={{ backgroundColor: BERKELEY_BLUE, borderColor: "rgba(255,255,255,0.1)" }}
       >
+        <button
+          onClick={() => navigate("/landing")}
+          className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors"
+          style={{ color: location.pathname === "/landing" ? CAL_GOLD : "rgba(255,255,255,0.5)" }}
+        >
+          <LayoutGrid className="size-5" />
+          Courses
+        </button>
         {NAV_ITEMS.map(({ label, path, Icon }) => {
           const active = location.pathname === path;
           return (
